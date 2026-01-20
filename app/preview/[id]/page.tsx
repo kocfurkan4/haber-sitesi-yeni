@@ -36,6 +36,10 @@ export default function PreviewPage() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
 
+  // History management
+  const [history, setHistory] = useState<Array<{title: string, summary: string, content: string}>>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
   const totalCharacters = title.length + summary.length + content.length;
   const totalWords =
     title.split(/\s+/).filter(Boolean).length +
@@ -45,6 +49,11 @@ export default function PreviewPage() {
   useEffect(() => {
     if (!news) {
       router.push("/haberler");
+    } else {
+      // Initialize history with the original news content
+      const initialEntry = { title: news.title, summary: news.summary, content: news.content };
+      setHistory([initialEntry]);
+      setHistoryIndex(0);
     }
   }, [news, router]);
 
@@ -87,6 +96,37 @@ export default function PreviewPage() {
       audioRef.current.currentTime = 0;
       audioRef.current.play();
       setIsPlaying(true);
+    }
+  };
+
+  // Add to history when content changes
+  const addToHistory = () => {
+    const newEntry = { title, summary, content };
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newEntry);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  // Undo function
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const prevState = history[historyIndex - 1];
+      setTitle(prevState.title);
+      setSummary(prevState.summary);
+      setContent(prevState.content);
+      setHistoryIndex(historyIndex - 1);
+    }
+  };
+
+  // Redo function
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextState = history[historyIndex + 1];
+      setTitle(nextState.title);
+      setSummary(nextState.summary);
+      setContent(nextState.content);
+      setHistoryIndex(historyIndex + 1);
     }
   };
 
@@ -149,7 +189,7 @@ export default function PreviewPage() {
 
 Tarih: ${news.date}
 
-Link: ${window.location.origin}/preview/${newsId}`;
+Link: ${news.sourceUrl}`;
 
     navigator.clipboard.writeText(formattedText);
     alert("Panoya kopyalandı!");
@@ -225,7 +265,10 @@ Link: ${window.location.origin}/preview/${newsId}`;
               </div>
               <textarea
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  addToHistory();
+                }}
                 className="w-full bg-military-900 border-2 border-military-600 rounded-lg p-4 text-gray-900 min-h-[80px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 placeholder="Haber başlığı..."
               />
@@ -238,7 +281,10 @@ Link: ${window.location.origin}/preview/${newsId}`;
               </div>
               <textarea
                 value={summary}
-                onChange={(e) => setSummary(e.target.value)}
+                onChange={(e) => {
+                  setSummary(e.target.value);
+                  addToHistory();
+                }}
                 className="w-full bg-military-900 border-2 border-military-600 rounded-lg p-4 text-gray-900 min-h-[120px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 placeholder="Haber özeti..."
               />
@@ -251,7 +297,10 @@ Link: ${window.location.origin}/preview/${newsId}`;
               </div>
               <textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  addToHistory();
+                }}
                 className="w-full bg-military-900 border-2 border-military-600 rounded-lg p-4 text-gray-900 min-h-[300px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 placeholder="Haber içeriği..."
               />
@@ -274,11 +323,19 @@ Link: ${window.location.origin}/preview/${newsId}`;
 
           {/* Action Buttons */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <button className="flex items-center justify-center space-x-2 bg-accent-yellow hover:bg-accent-yellow/80 text-gray-900 px-4 py-3 rounded-lg font-bold transition-smooth">
+            <button
+              onClick={handleUndo}
+              disabled={historyIndex <= 0}
+              className="flex items-center justify-center space-x-2 bg-accent-yellow hover:bg-accent-yellow/80 text-gray-900 px-4 py-3 rounded-lg font-bold transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Undo2 size={18} />
               <span>Geri Al</span>
             </button>
-            <button className="flex items-center justify-center space-x-2 bg-accent-blue hover:bg-accent-blue/80 text-white px-4 py-3 rounded-lg font-bold transition-smooth">
+            <button
+              onClick={handleRedo}
+              disabled={historyIndex >= history.length - 1}
+              className="flex items-center justify-center space-x-2 bg-accent-blue hover:bg-accent-blue/80 text-white px-4 py-3 rounded-lg font-bold transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Redo2 size={18} />
               <span>İleri Al</span>
             </button>
@@ -364,7 +421,7 @@ Link: ${window.location.origin}/preview/${newsId}`;
 
         {/* Footer Note */}
         <div className="text-center text-gray-600 text-sm">
-          Teknoloji Haberleri Projesi © 2025
+          Piyade Haberleri Projesi © 2025
         </div>
       </div>
     </div>

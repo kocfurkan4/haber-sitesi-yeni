@@ -9,10 +9,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
-              💻 Teknoloji Haberleri
+              💻 Piyade Haberleri
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
-              En güncel teknoloji haberlerini takip edin. Yapay zeka, yazılım, donanım ve daha fazlası...
+              En güncel piyade haberlerini takip edin. Yapay zeka, yazılım, donanım ve daha fazlası...
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
@@ -41,7 +41,7 @@ export default function HomePage() {
             Öne Çıkan Özellikler
           </h2>
           <p className="text-xl text-gray-600">
-            Teknoloji dünyasını takip etmenin en kolay yolu
+            Savunma sanayiini takip etmenin en kolay yolu
           </p>
         </div>
 
@@ -57,7 +57,7 @@ export default function HomePage() {
               Güncel Haberler
             </h3>
             <p className="text-gray-600 text-center">
-              Teknoloji dünyasındaki en son gelişmeleri anında takip edin. Yapay zeka, yazılım, donanım ve daha fazlası.
+              Savunma sanayiindeki en son gelişmeleri anında takip edin. Yapay zeka, yazılım, donanım ve daha fazlası.
             </p>
           </div>
 
@@ -120,7 +120,7 @@ export default function HomePage() {
             Hemen Başlayın
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Teknoloji dünyasındaki en güncel haberlere hemen erişin ve tercihlerinize göre özelleştirin.
+            Savunma sanayiindeki en güncel haberlere hemen erişin ve tercihlerinize göre özelleştirin.
           </p>
           <Link
             href="/haberler"

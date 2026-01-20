@@ -32,7 +32,7 @@ export default function Navbar() {
             className="flex items-center space-x-2 text-accent-green font-bold text-xl hover:text-primary transition-smooth"
           >
             <span>📰</span>
-            <span>Teknoloji Haberleri</span>
+            <span>Piyade Haberleri</span>
           </Link>
 
           {/* Desktop Navigation */}

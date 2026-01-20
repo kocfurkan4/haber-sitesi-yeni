@@ -1,6 +1,6 @@
-# 💻 Piyade - Teknoloji Haberleri
+# 💻 Piyade - Piyade Haberleri
 
-Modern ve profesyonel teknoloji haberleri portalı. Next.js 14+, TypeScript ve Tailwind CSS ile geliştirilmiştir.
+Modern ve profesyonel piyade haberleri portalı. Next.js 14+, TypeScript ve Tailwind CSS ile geliştirilmiştir.
 
 ## 🚀 Canlı Demo
 
@@ -18,7 +18,7 @@ Modern ve profesyonel teknoloji haberleri portalı. Next.js 14+, TypeScript ve T
 ## 📋 Sayfa Yapısı
 
 - `/` - Ana sayfa (Hero section, özellikler, CTA)
-- `/haberler` - Tüm teknoloji haberleri
+- `/haberler` - Tüm piyade haberleri
 - `/settings` - Kullanıcı ayarları
 - `/login` - Giriş sayfası
 

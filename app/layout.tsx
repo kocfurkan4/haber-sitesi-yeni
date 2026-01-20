@@ -4,8 +4,8 @@ import Navbar from "@/components/Navbar";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Piyade - Teknoloji Haberleri",
-  description: "En güncel teknoloji haberlerini takip edin",
+  title: "Piyade - Piyade Haberleri",
+  description: "En güncel piyade haberlerini takip edin",
 };
 
 export default function RootLayout({

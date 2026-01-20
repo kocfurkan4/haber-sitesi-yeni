@@ -9,13 +9,10 @@ export const metadata: Metadata = {
 };
 
 const Footer = () => (
-  <footer className="bg-gradient-to-r from-gray-800 to-gray-900 border-t border-gray-700 mt-10 py-6 text-center text-sm text-gray-300">
+  <footer className="bg-black border-t border-gray-800 mt-10 py-4 text-center">
     <div className="container mx-auto px-4">
-      <p className="mb-2">
-        &copy; {new Date().getFullYear()} Piyade Haberleri - Tüm hakları saklıdır.
-      </p>
-      <p className="text-gray-400">
-        <span className="text-blue-400 font-semibold">Axer</span> tarafından yapılmıştır.
+      <p className="text-xs text-gray-400">
+        &copy; 2026 - Axer tarafından yapılmıştır. Tüm hakları saklıdır.
       </p>
     </div>
   </footer>

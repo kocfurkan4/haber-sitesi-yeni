@@ -110,15 +110,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Info Note */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-gray-700 text-sm text-center">
-              <strong className="text-blue-700">Varsayılan Giriş Bilgileri:</strong><br />
-              Kullanıcı: <code className="text-blue-600 font-semibold">admin</code><br />
-              Şifre: <code className="text-blue-600 font-semibold">Axer2019*</code>
-            </p>
-          </div>
-
           {/* Link to News */}
           <div className="mt-4 text-center">
             <a

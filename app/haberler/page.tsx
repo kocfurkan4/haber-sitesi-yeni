@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import NewsCard from "@/components/NewsCard";
 import { NewsItem } from "@/lib/mockData";
 import Link from "next/link";
+import { ExternalLink, Eye } from "lucide-react";
 
 export default function HaberlerPage() {
   const [showOnlyUnsent, setShowOnlyUnsent] = useState(false);
@@ -115,6 +115,22 @@ export default function HaberlerPage() {
     });
   }, [showOnlyUnsent, selectedSource, allNews]);
 
+  // Format date
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("tr-TR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Section */}
@@ -184,7 +200,7 @@ export default function HaberlerPage() {
       </div>
 
       {/* News List */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {isLoading ? (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center border-2 border-military-600">
             <div className="animate-pulse">
@@ -209,23 +225,87 @@ export default function HaberlerPage() {
             </Link>
           </div>
         ) : filteredNews.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredNews.map((news) => (
-              <NewsCard
-                key={news.id}
-                item={{
-                  id: news.id,
-                  title: news.title,
-                  link: news.sourceUrl || '#',
-                  pubDate: news.date,
-                  content: news.content || news.summary || '',
-                  source: news.source,
-                  score: news.interestScore || 7,
-                  isSent: news.isSent || false
-                }}
-              />
-            ))}
-          </div>
+          // Simple list view - full width
+          filteredNews.map((news) => (
+            <div
+              key={news.id}
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 p-6"
+            >
+              <div className="flex flex-col gap-3">
+                {/* Header: Source and Date */}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="font-semibold text-blue-600">
+                    📰 {news.source}
+                  </span>
+                  <span className="text-gray-500">
+                    {formatDate(news.date)}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                  {news.title}
+                </h3>
+
+                {/* Summary/Content preview */}
+                <p className="text-gray-700 line-clamp-2">
+                  {news.summary || news.content?.substring(0, 200) || "İçerik bulunamadı"}
+                  {(news.content?.length || 0) > 200 && "..."}
+                </p>
+
+                {/* Actions */}
+                <div className="flex flex-wrap items-center gap-3 mt-2">
+                  {/* Preview Button */}
+                  <Link
+                    href={`/preview/haber-detay?title=${encodeURIComponent(
+                      news.title
+                    )}&content=${encodeURIComponent(
+                      news.content || news.summary || ""
+                    )}&source=${encodeURIComponent(
+                      news.source
+                    )}&link=${encodeURIComponent(
+                      news.sourceUrl || ""
+                    )}&date=${encodeURIComponent(news.date)}`}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  >
+                    <Eye size={16} />
+                    Ön İzleme
+                  </Link>
+
+                  {/* Original Link */}
+                  {news.sourceUrl && (
+                    <a
+                      href={news.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium text-sm"
+                    >
+                      <ExternalLink size={16} />
+                      Orijinal Haber
+                    </a>
+                  )}
+
+                  {/* Status Badge */}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      news.isSent
+                        ? "bg-green-100 text-green-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    {news.isSent ? "✓ Gönderildi" : "⏳ Bekliyor"}
+                  </span>
+
+                  {/* Interest Score */}
+                  {news.interestScore && (
+                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                      ⭐ {news.interestScore}/10
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
         ) : allNews.length === 0 ? (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center border-2 border-accent-yellow">
             <div className="text-6xl mb-4">📡</div>

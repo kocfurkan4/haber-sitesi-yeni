@@ -45,7 +45,7 @@ const HomePage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('/api/parse-rss', {
+      const response = await fetch('/api/news', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,11 +64,7 @@ const HomePage: React.FC = () => {
         throw new Error('Sunucudan geçersiz veri formatı alındı.');
       }
 
-      // Sadece aktif kaynaklardan gelen haberleri göster
-      const activeSources = sources.map(url => new URL(url).hostname);
-      const synchronizedNews = data.filter(item => activeSources.includes(item.source));
-
-      setNews(synchronizedNews.map(item => ({
+      setNews(data.map(item => ({
         ...item,
         score: item.score || Math.floor(Math.random() * 5) + 6,
         isSent: item.isSent || Math.random() > 0.5,

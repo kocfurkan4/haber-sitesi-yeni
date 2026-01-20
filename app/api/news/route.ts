@@ -28,15 +28,28 @@ export async function POST(request: Request) {
         const feed = await parser.parseURL(url);
 
         // Her bir haber öğesini standart bir formata dönüştür
-        const newsItems = feed.items.map(item => ({
-          id: item.guid || item.link,
-          title: item.title,
-          link: item.link,
-          pubDate: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-          content: item.contentSnippet || item.content,
-          source: feed.title || new URL(url).hostname, // Kaynak adını feed başlığından al
-          // Diğer alanlar (ilgi puanı, kategori vb.) burada eklenebilir.
-        }));
+        const newsItems = feed.items.map(item => {
+          // Kaynak ismini temizle - tekrarları ve gereksiz kısımları kaldır
+          let sourceName = feed.title || new URL(url).hostname;
+          // Eğer kaynak ismi tekrar ediyorsa (örn: "Breaking DefenseBreaking Defense"), temizle
+          const words = sourceName.split(' ');
+          const uniqueWords = [...new Set(words)];
+          if (words.length > uniqueWords.length * 1.5) {
+            // Tekrar var, ilk yarısını al
+            sourceName = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+          }
+          // Tire ve sonrasını kaldır (örn: "Breaking Defense - News" -> "Breaking Defense")
+          sourceName = sourceName.split('-')[0].trim();
+
+          return {
+            id: item.guid || item.link,
+            title: item.title,
+            link: item.link,
+            pubDate: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+            content: item.contentSnippet || item.content,
+            source: sourceName,
+          };
+        });
 
         return newsItems;
       } catch (error) {

@@ -10,24 +10,24 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#2d4a2b',
-          dark: '#1f3520',
-          light: '#3d5a3b',
+          DEFAULT: '#3d5a3b',
+          dark: '#2d4a2b',
+          light: '#4d6a4b',
         },
         military: {
-          900: '#0f1410',
-          800: '#1a2318',
-          700: '#253120',
-          600: '#2d4a2b',
-          500: '#3d5a3b',
-          400: '#4d6a4b',
-          300: '#5d7a5b',
+          900: '#e8f0e8',
+          800: '#d4e4d4',
+          700: '#b8d4b8',
+          600: '#9cbf9c',
+          500: '#7ea87e',
+          400: '#5d8a5d',
+          300: '#4d6a4b',
         },
         accent: {
-          green: '#4ade80',
-          yellow: '#fbbf24',
-          red: '#ef4444',
-          blue: '#3b82f6',
+          green: '#16a34a',
+          yellow: '#f59e0b',
+          red: '#dc2626',
+          blue: '#2563eb',
         }
       },
     },

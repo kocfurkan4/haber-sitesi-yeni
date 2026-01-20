@@ -136,8 +136,20 @@ export default function PreviewPage() {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = () => {
+    if (!news) return;
+
+    const formattedText = `Başlık: ${title}
+
+Özet: ${summary}
+
+İçerik: ${content}
+
+Tarih: ${news.date}
+
+Link: ${news.sourceUrl}`;
+
+    navigator.clipboard.writeText(formattedText);
     alert("Panoya kopyalandı!");
   };
 
@@ -152,50 +164,50 @@ export default function PreviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-military-900 py-8 px-4">
+    <div className="min-h-screen bg-white py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <button
             onClick={() => router.push("/haberler")}
-            className="flex items-center space-x-2 text-accent-green hover:text-accent-yellow transition-smooth font-bold"
+            className="flex items-center space-x-2 text-accent-green hover:text-primary transition-smooth font-bold"
           >
             <ArrowLeft size={20} />
             <span>← Haberlere Dön</span>
           </button>
         </div>
 
-        <div className="bg-military-800 rounded-xl p-6 border-2 border-military-700 shadow-xl mb-6">
+        <div className="bg-white rounded-xl p-6 border-2 border-military-600 shadow-xl mb-6">
           <h1 className="text-3xl font-bold text-accent-green mb-4 flex items-center space-x-3">
             <span>📝</span>
             <span>Gönderim Öncesi Ön İzleme</span>
           </h1>
 
           {/* News Info */}
-          <div className="bg-primary/30 rounded-lg p-6 mb-6 border-2 border-primary">
-            <h2 className="text-2xl font-bold text-white mb-4">{news.title}</h2>
+          <div className="bg-primary/20 rounded-lg p-6 mb-6 border-2 border-primary">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">{news.title}</h2>
             <div className="flex flex-wrap gap-4 text-sm">
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400">📅</span>
-                <span className="text-gray-300">
+                <span className="text-gray-600">📅</span>
+                <span className="text-gray-700">
                   <strong>Tarih:</strong> {news.date}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400">⭐</span>
-                <span className="text-gray-300">
+                <span className="text-gray-600">⭐</span>
+                <span className="text-gray-700">
                   <strong>İlgi Puanı:</strong> {news.interestScore}/10
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400">📂</span>
-                <span className="text-gray-300">
+                <span className="text-gray-600">📂</span>
+                <span className="text-gray-700">
                   <strong>Kategori:</strong> {news.category}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400">📰</span>
-                <span className="text-gray-300">
+                <span className="text-gray-600">📰</span>
+                <span className="text-gray-700">
                   <strong>Kaynak:</strong> {news.source}
                 </span>
               </div>
@@ -207,12 +219,12 @@ export default function PreviewPage() {
             {/* Title Section */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xl font-bold text-gray-200">* BAŞLIK</h3>
+                <h3 className="text-xl font-bold text-gray-800">* BAŞLIK</h3>
               </div>
               <textarea
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-military-700 border-2 border-military-600 rounded-lg p-4 text-gray-200 min-h-[80px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                className="w-full bg-military-900 border-2 border-military-600 rounded-lg p-4 text-gray-900 min-h-[80px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 placeholder="Haber başlığı..."
               />
             </div>
@@ -220,12 +232,12 @@ export default function PreviewPage() {
             {/* Summary Section */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xl font-bold text-gray-200">* ÖZET</h3>
+                <h3 className="text-xl font-bold text-gray-800">* ÖZET</h3>
               </div>
               <textarea
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
-                className="w-full bg-military-700 border-2 border-military-600 rounded-lg p-4 text-gray-200 min-h-[120px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                className="w-full bg-military-900 border-2 border-military-600 rounded-lg p-4 text-gray-900 min-h-[120px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 placeholder="Haber özeti..."
               />
             </div>
@@ -233,34 +245,34 @@ export default function PreviewPage() {
             {/* Content Section */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xl font-bold text-gray-200">* İÇERİK</h3>
+                <h3 className="text-xl font-bold text-gray-800">* İÇERİK</h3>
               </div>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full bg-military-700 border-2 border-military-600 rounded-lg p-4 text-gray-200 min-h-[300px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                className="w-full bg-military-900 border-2 border-military-600 rounded-lg p-4 text-gray-900 min-h-[300px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 placeholder="Haber içeriği..."
               />
             </div>
           </div>
 
           {/* Stats */}
-          <div className="mt-6 bg-military-700 rounded-lg p-6 border border-military-600">
+          <div className="mt-6 bg-military-900 rounded-lg p-6 border border-military-600">
             <div className="grid grid-cols-2 gap-6 text-center">
               <div>
                 <div className="text-4xl font-bold text-accent-blue mb-2">{totalCharacters}</div>
-                <div className="text-gray-400 font-medium">Toplam Karakter</div>
+                <div className="text-gray-700 font-medium">Toplam Karakter</div>
               </div>
               <div>
                 <div className="text-4xl font-bold text-accent-green mb-2">{totalWords}</div>
-                <div className="text-gray-400 font-medium">Toplam Kelime</div>
+                <div className="text-gray-700 font-medium">Toplam Kelime</div>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <button className="flex items-center justify-center space-x-2 bg-accent-yellow hover:bg-accent-yellow/80 text-military-900 px-4 py-3 rounded-lg font-bold transition-smooth">
+            <button className="flex items-center justify-center space-x-2 bg-accent-yellow hover:bg-accent-yellow/80 text-gray-900 px-4 py-3 rounded-lg font-bold transition-smooth">
               <Undo2 size={18} />
               <span>Geri Al</span>
             </button>
@@ -277,7 +289,7 @@ export default function PreviewPage() {
               <span>{isTranslating ? "Çevriliyor..." : "Kaydet"}</span>
             </button>
             <button
-              onClick={() => copyToClipboard(title + "\n\n" + summary + "\n\n" + content)}
+              onClick={copyToClipboard}
               className="flex items-center justify-center space-x-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg font-bold transition-smooth"
             >
               <Copy size={18} />
@@ -302,10 +314,10 @@ export default function PreviewPage() {
 
           {/* Audio Player */}
           {audioUrl && (
-            <div className="mt-6 bg-military-700 rounded-lg p-6 border border-military-600">
+            <div className="mt-6 bg-military-900 rounded-lg p-6 border border-military-600">
               <div className="flex items-center space-x-4 mb-4">
-                <span className="text-purple-400">🎵</span>
-                <h3 className="text-lg font-bold text-gray-200">Audio Player</h3>
+                <span className="text-purple-500">🎵</span>
+                <h3 className="text-lg font-bold text-gray-800">Audio Player</h3>
               </div>
 
               <audio ref={audioRef} src={audioUrl} className="hidden" />
@@ -320,7 +332,7 @@ export default function PreviewPage() {
 
                 <button
                   onClick={handleRestart}
-                  className="bg-accent-yellow hover:bg-accent-yellow/80 text-military-900 p-3 rounded-full transition-smooth"
+                  className="bg-accent-yellow hover:bg-accent-yellow/80 text-gray-900 p-3 rounded-full transition-smooth"
                 >
                   <SkipBack size={24} />
                 </button>
@@ -338,7 +350,7 @@ export default function PreviewPage() {
                     }}
                     className="w-full"
                   />
-                  <div className="flex justify-between text-sm text-gray-400 mt-1">
+                  <div className="flex justify-between text-sm text-gray-600 mt-1">
                     <span>{formatTime(audioTime)}</span>
                     <span>{formatTime(audioDuration)}</span>
                   </div>
@@ -349,7 +361,7 @@ export default function PreviewPage() {
         </div>
 
         {/* Footer Note */}
-        <div className="text-center text-gray-500 text-sm">
+        <div className="text-center text-gray-600 text-sm">
           Teknoloji Haberleri Projesi © 2025
         </div>
       </div>

@@ -23,13 +23,13 @@ export default function Navbar() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <nav className="bg-military-800 sticky top-0 z-50 shadow-lg border-b-2 border-military-700">
+    <nav className="bg-military-700 sticky top-0 z-50 shadow-lg border-b-2 border-military-600">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center space-x-2 text-accent-green font-bold text-xl hover:text-accent-yellow transition-smooth"
+            className="flex items-center space-x-2 text-accent-green font-bold text-xl hover:text-primary transition-smooth"
           >
             <span>📰</span>
             <span>Teknoloji Haberleri</span>
@@ -41,8 +41,8 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center space-x-2 text-gray-300 font-medium hover:text-accent-green transition-smooth relative px-3 py-2 rounded ${
-                  isActive(link.href) ? "text-accent-green bg-military-700" : ""
+                className={`flex items-center space-x-2 text-gray-800 font-medium hover:text-accent-green transition-smooth relative px-3 py-2 rounded ${
+                  isActive(link.href) ? "text-accent-green bg-military-600" : ""
                 }`}
               >
                 {link.icon && <link.icon size={18} />}
@@ -52,7 +52,7 @@ export default function Navbar() {
             {isAuthenticated && (
               <button
                 onClick={logout}
-                className="flex items-center space-x-2 text-gray-300 font-medium hover:text-accent-red transition-smooth px-3 py-2 rounded"
+                className="flex items-center space-x-2 text-gray-800 font-medium hover:text-accent-red transition-smooth px-3 py-2 rounded"
               >
                 <LogOut size={18} />
                 <span>Çıkış</span>
@@ -62,7 +62,7 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-gray-300 hover:text-accent-green transition-smooth"
+            className="md:hidden text-gray-800 hover:text-accent-green transition-smooth"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -76,8 +76,8 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center space-x-2 text-gray-300 font-medium hover:text-accent-green hover:bg-military-700 px-4 py-2 rounded transition-smooth ${
-                  isActive(link.href) ? "bg-military-700 text-accent-green" : ""
+                className={`flex items-center space-x-2 text-gray-800 font-medium hover:text-accent-green hover:bg-military-600 px-4 py-2 rounded transition-smooth ${
+                  isActive(link.href) ? "bg-military-600 text-accent-green" : ""
                 }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -91,7 +91,7 @@ export default function Navbar() {
                   logout();
                   setMobileMenuOpen(false);
                 }}
-                className="flex items-center space-x-2 w-full text-gray-300 font-medium hover:text-accent-red hover:bg-military-700 px-4 py-2 rounded transition-smooth"
+                className="flex items-center space-x-2 w-full text-gray-800 font-medium hover:text-accent-red hover:bg-military-600 px-4 py-2 rounded transition-smooth"
               >
                 <LogOut size={18} />
                 <span>Çıkış</span>

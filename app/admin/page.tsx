@@ -80,11 +80,51 @@ export default function AdminPage() {
   const [newRssUrl, setNewRssUrl] = useState("");
   const [newsPreferredOnly, setNewsPreferredOnly] = useState(false);
 
+  // API Key input states
+  const [newGeminiKeyName, setNewGeminiKeyName] = useState("");
+  const [newGeminiKeyValue, setNewGeminiKeyValue] = useState("");
+  const [newElevenlabsKeyName, setNewElevenlabsKeyName] = useState("");
+  const [newElevenlabsKeyValue, setNewElevenlabsKeyValue] = useState("");
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
     }
   }, [isAuthenticated, router]);
+
+  // Load Gemini keys from localStorage
+  useEffect(() => {
+    const storedKeys = localStorage.getItem("geminiKeys");
+    if (storedKeys) {
+      try {
+        setGeminiKeys(JSON.parse(storedKeys));
+      } catch (error) {
+        console.error("Error loading Gemini keys:", error);
+      }
+    }
+  }, []);
+
+  // Load ElevenLabs keys from localStorage
+  useEffect(() => {
+    const storedKeys = localStorage.getItem("elevenlabsKeys");
+    if (storedKeys) {
+      try {
+        setElevenlabsKeys(JSON.parse(storedKeys));
+      } catch (error) {
+        console.error("Error loading ElevenLabs keys:", error);
+      }
+    }
+  }, []);
+
+  // Save Gemini keys to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("geminiKeys", JSON.stringify(geminiKeys));
+  }, [geminiKeys]);
+
+  // Save ElevenLabs keys to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("elevenlabsKeys", JSON.stringify(elevenlabsKeys));
+  }, [elevenlabsKeys]);
 
   if (!isAuthenticated) {
     return null;
@@ -131,8 +171,42 @@ export default function AdminPage() {
     setRssFeeds(rssFeeds.filter((_, i) => i !== index));
   };
 
+  // Gemini API Key functions
+  const addGeminiKey = () => {
+    if (newGeminiKeyName.trim() && newGeminiKeyValue.trim()) {
+      setGeminiKeys([...geminiKeys, { name: newGeminiKeyName, value: newGeminiKeyValue }]);
+      setNewGeminiKeyName("");
+      setNewGeminiKeyValue("");
+    }
+  };
+
+  const removeGeminiKey = (index: number) => {
+    setGeminiKeys(geminiKeys.filter((_, i) => i !== index));
+  };
+
+  const showGeminiKeyDetails = (key: { name: string; value: string }) => {
+    alert(`Anahtar Adı: ${key.name}\nAnahtar Değeri: ${key.value}`);
+  };
+
+  // ElevenLabs API Key functions
+  const addElevenlabsKey = () => {
+    if (newElevenlabsKeyName.trim() && newElevenlabsKeyValue.trim()) {
+      setElevenlabsKeys([...elevenlabsKeys, { name: newElevenlabsKeyName, value: newElevenlabsKeyValue }]);
+      setNewElevenlabsKeyName("");
+      setNewElevenlabsKeyValue("");
+    }
+  };
+
+  const removeElevenlabsKey = (index: number) => {
+    setElevenlabsKeys(elevenlabsKeys.filter((_, i) => i !== index));
+  };
+
+  const showElevenlabsKeyDetails = (key: { name: string; value: string }) => {
+    alert(`Anahtar Adı: ${key.name}\nAnahtar Değeri: ${key.value}`);
+  };
+
   return (
-    <div className="min-h-screen bg-military-900 py-8 px-4">
+    <div className="min-h-screen bg-white py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -140,31 +214,31 @@ export default function AdminPage() {
             <span>🛡️</span>
             <span>Admin Panel</span>
           </h1>
-          <p className="text-gray-400 mt-2">Sistem ayarlarını ve yapılandırmalarını yönetin</p>
+          <p className="text-gray-700 mt-2">Sistem ayarlarını ve yapılandırmalarını yönetin</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Filtre Anahtar Kelimeleri */}
-          <div className="bg-military-800 rounded-xl p-6 border-2 border-military-700 shadow-xl">
+          <div className="bg-white rounded-xl p-6 border-2 border-military-600 shadow-xl">
             <div className="flex items-center space-x-2 mb-4">
               <Filter className="text-accent-blue" size={24} />
-              <h2 className="text-2xl font-bold text-gray-200">Filtre Anahtar Kelimeleri</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Filtre Anahtar Kelimeleri</h2>
               <span className="bg-accent-blue/20 text-accent-blue px-3 py-1 rounded-full text-sm font-bold">
                 {filterKeywords.length}
               </span>
             </div>
-            <p className="text-gray-400 text-sm mb-4">Haber filtreleme için kullanılan anahtar kelimeler</p>
+            <p className="text-gray-700 text-sm mb-4">Haber filtreleme için kullanılan anahtar kelimeler</p>
 
             {/* Add New Keyword */}
             <div className="mb-4">
-              <label className="block text-gray-300 font-semibold mb-2">Yeni Anahtar Kelime Ekle</label>
+              <label className="block text-gray-800 font-semibold mb-2">Yeni Anahtar Kelime Ekle</label>
               <div className="flex space-x-2">
                 <input
                   type="text"
                   value={newFilterKeyword}
                   onChange={(e) => setNewFilterKeyword(e.target.value)}
                   placeholder="Anahtar kelime..."
-                  className="flex-1 px-4 py-2 bg-military-700 border-2 border-military-600 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                  className="flex-1 px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                   onKeyPress={(e) => e.key === "Enter" && addFilterKeyword()}
                 />
                 <button
@@ -180,9 +254,9 @@ export default function AdminPage() {
                   type="checkbox"
                   checked={newsPreferredOnly}
                   onChange={(e) => setNewsPreferredOnly(e.target.checked)}
-                  className="w-4 h-4 bg-military-700 border-military-600 rounded focus:ring-2 focus:ring-accent-green cursor-pointer"
+                  className="w-4 h-4 bg-military-900 border-military-600 rounded focus:ring-2 focus:ring-accent-green cursor-pointer"
                 />
-                <span className="ml-2 text-gray-300 text-sm">Tercih edilen (preferred) olarak işaretle</span>
+                <span className="ml-2 text-gray-800 text-sm">Tercih edilen (preferred) olarak işaretle</span>
               </label>
             </div>
 
@@ -191,10 +265,10 @@ export default function AdminPage() {
               {filterKeywords.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between bg-military-700 px-4 py-2 rounded-lg border border-military-600"
+                  className="flex items-center justify-between bg-military-900 px-4 py-2 rounded-lg border border-military-600"
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-gray-200 font-medium">{item.keyword}</span>
+                    <span className="text-gray-900 font-medium">{item.keyword}</span>
                     {item.preferred && (
                       <span className="bg-accent-green/20 text-accent-green px-2 py-1 rounded text-xs font-bold">
                         Tercih edilen
@@ -213,33 +287,33 @@ export default function AdminPage() {
           </div>
 
           {/* Çeviri Çifti Ekle */}
-          <div className="bg-military-800 rounded-xl p-6 border-2 border-military-700 shadow-xl">
+          <div className="bg-white rounded-xl p-6 border-2 border-military-600 shadow-xl">
             <div className="flex items-center space-x-2 mb-4">
               <Globe className="text-accent-blue" size={24} />
-              <h2 className="text-2xl font-bold text-gray-200">Çeviri Anahtar Kelimeleri</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Çeviri Anahtar Kelimeleri</h2>
               <span className="bg-accent-blue/20 text-accent-blue px-3 py-1 rounded-full text-sm font-bold">
                 {translationPairs.length}
               </span>
             </div>
-            <p className="text-gray-400 text-sm mb-4">İngilizce-Türkçe çeviri çiftleri ekleyin</p>
+            <p className="text-gray-700 text-sm mb-4">İngilizce-Türkçe çeviri çiftleri ekleyin</p>
 
             {/* Add New Translation Pair */}
             <div className="mb-4 space-y-3">
-              <label className="block text-gray-300 font-semibold">Yeni Çeviri Çifti Ekle</label>
+              <label className="block text-gray-800 font-semibold">Yeni Çeviri Çifti Ekle</label>
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
                   value={newTranslationEn}
                   onChange={(e) => setNewTranslationEn(e.target.value)}
                   placeholder="İngilizce"
-                  className="px-4 py-2 bg-military-700 border-2 border-military-600 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                  className="px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 />
                 <input
                   type="text"
                   value={newTranslationTr}
                   onChange={(e) => setNewTranslationTr(e.target.value)}
                   placeholder="Türkçe"
-                  className="px-4 py-2 bg-military-700 border-2 border-military-600 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                  className="px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 />
               </div>
               <button
@@ -256,7 +330,7 @@ export default function AdminPage() {
               {translationPairs.map((pair, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between bg-military-700 px-4 py-2 rounded-lg border border-military-600"
+                  className="flex items-center justify-between bg-military-900 px-4 py-2 rounded-lg border border-military-600"
                 >
                   <div className="flex items-center space-x-2 flex-1">
                     <span className="text-accent-yellow font-medium">{pair.en}</span>
@@ -276,11 +350,11 @@ export default function AdminPage() {
         </div>
 
         {/* Örnek Haberler */}
-        <div className="bg-military-800 rounded-xl p-6 border-2 border-military-700 shadow-xl mt-6">
+        <div className="bg-white rounded-xl p-6 border-2 border-military-600 shadow-xl mt-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <Newspaper className="text-accent-blue" size={24} />
-              <h2 className="text-2xl font-bold text-gray-200">Örnek Haberler</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Örnek Haberler</h2>
               <span className="bg-accent-blue/20 text-accent-blue px-3 py-1 rounded-full text-sm font-bold">
                 7
               </span>
@@ -290,21 +364,21 @@ export default function AdminPage() {
               <span>Haberleri Görüntüle</span>
             </button>
           </div>
-          <p className="text-gray-400 text-sm mb-4">Aktif olarak filtrelenen örnek haberler</p>
+          <p className="text-gray-700 text-sm mb-4">Aktif olarak filtrelenen örnek haberler</p>
 
           <div className="mb-4">
-            <label className="block text-gray-300 font-semibold mb-2">Yeni Örnek Haber Ekle</label>
+            <label className="block text-gray-800 font-semibold mb-2">Yeni Örnek Haber Ekle</label>
             <input
               type="text"
               placeholder="Haber içeriği (opsiyonel)"
-              className="w-full px-4 py-2 bg-military-700 border-2 border-military-600 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+              className="w-full px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
             />
             <div className="flex items-center mt-2">
               <input
                 type="checkbox"
-                className="w-4 h-4 bg-military-700 border-military-600 rounded focus:ring-2 focus:ring-accent-green cursor-pointer"
+                className="w-4 h-4 bg-military-900 border-military-600 rounded focus:ring-2 focus:ring-accent-green cursor-pointer"
               />
-              <span className="ml-2 text-gray-300 text-sm">Tercih edilen (preferred) olarak işaretle</span>
+              <span className="ml-2 text-gray-800 text-sm">Tercih edilen (preferred) olarak işaretle</span>
             </div>
             <button className="mt-3 w-full bg-accent-green hover:bg-accent-green/80 text-white px-4 py-2 rounded-lg font-bold transition-smooth flex items-center justify-center space-x-2">
               <Plus size={20} />
@@ -322,10 +396,10 @@ export default function AdminPage() {
             ].map((news, index) => (
               <div
                 key={index}
-                className="bg-military-700 px-4 py-3 rounded-lg border border-military-600 flex items-center justify-between"
+                className="bg-military-900 px-4 py-3 rounded-lg border border-military-600 flex items-center justify-between"
               >
                 <div>
-                  <p className="text-gray-200 text-sm">{news}</p>
+                  <p className="text-gray-900 text-sm">{news}</p>
                   {index < 2 && (
                     <span className="inline-block mt-1 bg-accent-red/20 text-accent-red px-2 py-1 rounded text-xs font-bold">
                       Tercih edilmeyen
@@ -351,33 +425,33 @@ export default function AdminPage() {
         </div>
 
         {/* RSS Kaynakları */}
-        <div className="bg-military-800 rounded-xl p-6 border-2 border-military-700 shadow-xl mt-6">
+        <div className="bg-white rounded-xl p-6 border-2 border-military-600 shadow-xl mt-6">
           <div className="flex items-center space-x-2 mb-4">
             <Rss className="text-orange-500" size={24} />
-            <h2 className="text-2xl font-bold text-gray-200">RSS Kaynakları</h2>
+            <h2 className="text-2xl font-bold text-gray-900">RSS Kaynakları</h2>
             <span className="bg-orange-500/20 text-orange-500 px-3 py-1 rounded-full text-sm font-bold">
               {rssFeeds.length}
             </span>
           </div>
-          <p className="text-gray-400 text-sm mb-4">Haber çekmek için RSS feed kaynakları</p>
+          <p className="text-gray-700 text-sm mb-4">Haber çekmek için RSS feed kaynakları</p>
 
           {/* Add New RSS Feed */}
           <div className="mb-4 space-y-3">
-            <label className="block text-gray-300 font-semibold">Yeni RSS Kaynağı Ekle</label>
+            <label className="block text-gray-800 font-semibold">Yeni RSS Kaynağı Ekle</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <input
                 type="text"
                 value={newRssName}
                 onChange={(e) => setNewRssName(e.target.value)}
                 placeholder="Kaynak Adı (örn: Breaking Defense)"
-                className="px-4 py-2 bg-military-700 border-2 border-military-600 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                className="px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
               />
               <input
                 type="text"
                 value={newRssUrl}
                 onChange={(e) => setNewRssUrl(e.target.value)}
                 placeholder="RSS Feed URL"
-                className="px-4 py-2 bg-military-700 border-2 border-military-600 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                className="px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
               />
             </div>
             <button
@@ -394,10 +468,10 @@ export default function AdminPage() {
             {rssFeeds.map((feed, index) => (
               <div
                 key={index}
-                className="bg-military-700 px-4 py-3 rounded-lg border border-military-600"
+                className="bg-military-900 px-4 py-3 rounded-lg border border-military-600"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-200 font-bold">{feed.name}</span>
+                  <span className="text-gray-900 font-bold">{feed.name}</span>
                   <div className="flex items-center space-x-2">
                     <span className="bg-accent-green/20 text-accent-green px-2 py-1 rounded text-xs font-bold">
                       {feed.status}
@@ -410,7 +484,7 @@ export default function AdminPage() {
                     </button>
                   </div>
                 </div>
-                <p className="text-gray-400 text-xs truncate">{feed.url}</p>
+                <p className="text-gray-700 text-xs truncate">{feed.url}</p>
               </div>
             ))}
           </div>
@@ -419,25 +493,38 @@ export default function AdminPage() {
         {/* API Anahtarları */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {/* Gemini API */}
-          <div className="bg-military-800 rounded-xl p-6 border-2 border-military-700 shadow-xl">
+          <div className="bg-white rounded-xl p-6 border-2 border-military-600 shadow-xl">
             <div className="flex items-center space-x-2 mb-4">
               <Sparkles className="text-purple-400" size={24} />
-              <h2 className="text-2xl font-bold text-gray-200">Gemini API Anahtarları</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Gemini API Anahtarları</h2>
               <span className="bg-purple-400/20 text-purple-400 px-3 py-1 rounded-full text-sm font-bold">
                 {geminiKeys.length}
               </span>
             </div>
-            <p className="text-gray-400 text-sm mb-4">Haber çevirisi için Gemini AI anahtarları (1% oranla kullanılır)</p>
+            <p className="text-gray-700 text-sm mb-4">Haber çevirisi için Gemini AI anahtarları (1% oranla kullanılır)</p>
 
             <div className="mb-4">
-              <label className="block text-gray-300 font-semibold mb-2">Yeni Gemini API Anahtarı Ekle</label>
+              <label className="block text-gray-800 font-semibold mb-2">Yeni Gemini API Anahtarı Ekle</label>
               <div className="space-y-2">
                 <input
                   type="text"
+                  value={newGeminiKeyName}
+                  onChange={(e) => setNewGeminiKeyName(e.target.value)}
                   placeholder="Anahtar Adı (örn: Gemini Key 1)"
-                  className="w-full px-4 py-2 bg-military-700 border-2 border-military-600 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                  className="w-full px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 />
-                <button className="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-bold transition-smooth flex items-center justify-center space-x-2">
+                <input
+                  type="text"
+                  value={newGeminiKeyValue}
+                  onChange={(e) => setNewGeminiKeyValue(e.target.value)}
+                  placeholder="API Anahtarı"
+                  className="w-full px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                  onKeyPress={(e) => e.key === "Enter" && addGeminiKey()}
+                />
+                <button
+                  onClick={addGeminiKey}
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-bold transition-smooth flex items-center justify-center space-x-2"
+                >
                   <Plus size={20} />
                   <span>Ekle</span>
                 </button>
@@ -448,17 +535,23 @@ export default function AdminPage() {
               {geminiKeys.map((key, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between bg-military-700 px-4 py-2 rounded-lg border border-military-600"
+                  className="flex items-center justify-between bg-military-900 px-4 py-2 rounded-lg border border-military-600"
                 >
                   <div>
-                    <span className="text-gray-200 font-medium">{key.name}</span>
+                    <span className="text-gray-900 font-medium">{key.name}</span>
                     <p className="text-gray-500 text-xs">by {key.value}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="bg-accent-yellow/20 text-accent-yellow px-3 py-1 rounded text-sm font-bold hover:bg-accent-yellow/30 transition-smooth">
+                    <button
+                      onClick={() => showGeminiKeyDetails(key)}
+                      className="bg-accent-yellow/20 text-accent-yellow px-3 py-1 rounded text-sm font-bold hover:bg-accent-yellow/30 transition-smooth"
+                    >
                       Detay
                     </button>
-                    <button className="text-accent-red hover:text-accent-red/80 transition-smooth">
+                    <button
+                      onClick={() => removeGeminiKey(index)}
+                      className="text-accent-red hover:text-accent-red/80 transition-smooth"
+                    >
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -468,25 +561,38 @@ export default function AdminPage() {
           </div>
 
           {/* ElevenLabs API */}
-          <div className="bg-military-800 rounded-xl p-6 border-2 border-military-700 shadow-xl">
+          <div className="bg-white rounded-xl p-6 border-2 border-military-600 shadow-xl">
             <div className="flex items-center space-x-2 mb-4">
               <Volume2 className="text-purple-400" size={24} />
-              <h2 className="text-2xl font-bold text-gray-200">ElevenLabs API Anahtarları</h2>
+              <h2 className="text-2xl font-bold text-gray-900">ElevenLabs API Anahtarları</h2>
               <span className="bg-purple-400/20 text-purple-400 px-3 py-1 rounded-full text-sm font-bold">
                 {elevenlabsKeys.length}
               </span>
             </div>
-            <p className="text-gray-400 text-sm mb-4">Ses oluşturma için ElevenLabs API (0% oranla kullanılır)</p>
+            <p className="text-gray-700 text-sm mb-4">Ses oluşturma için ElevenLabs API (0% oranla kullanılır)</p>
 
             <div className="mb-4">
-              <label className="block text-gray-300 font-semibold mb-2">Yeni ElevenLabs API Anahtarı Ekle</label>
+              <label className="block text-gray-800 font-semibold mb-2">Yeni ElevenLabs API Anahtarı Ekle</label>
               <div className="space-y-2">
                 <input
                   type="text"
+                  value={newElevenlabsKeyName}
+                  onChange={(e) => setNewElevenlabsKeyName(e.target.value)}
                   placeholder="Anahtar Adı (örn: ElevenLabs Key 1)"
-                  className="w-full px-4 py-2 bg-military-700 border-2 border-military-600 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                  className="w-full px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
                 />
-                <button className="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-bold transition-smooth flex items-center justify-center space-x-2">
+                <input
+                  type="text"
+                  value={newElevenlabsKeyValue}
+                  onChange={(e) => setNewElevenlabsKeyValue(e.target.value)}
+                  placeholder="API Anahtarı"
+                  className="w-full px-4 py-2 bg-military-900 border-2 border-military-600 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                  onKeyPress={(e) => e.key === "Enter" && addElevenlabsKey()}
+                />
+                <button
+                  onClick={addElevenlabsKey}
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-bold transition-smooth flex items-center justify-center space-x-2"
+                >
                   <Plus size={20} />
                   <span>Ekle</span>
                 </button>
@@ -497,17 +603,23 @@ export default function AdminPage() {
               {elevenlabsKeys.map((key, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between bg-military-700 px-4 py-2 rounded-lg border border-military-600"
+                  className="flex items-center justify-between bg-military-900 px-4 py-2 rounded-lg border border-military-600"
                 >
                   <div>
-                    <span className="text-gray-200 font-medium">{key.name}</span>
+                    <span className="text-gray-900 font-medium">{key.name}</span>
                     <p className="text-gray-500 text-xs">by {key.value}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="bg-accent-yellow/20 text-accent-yellow px-3 py-1 rounded text-sm font-bold hover:bg-accent-yellow/30 transition-smooth">
+                    <button
+                      onClick={() => showElevenlabsKeyDetails(key)}
+                      className="bg-accent-yellow/20 text-accent-yellow px-3 py-1 rounded text-sm font-bold hover:bg-accent-yellow/30 transition-smooth"
+                    >
                       Detay
                     </button>
-                    <button className="text-accent-red hover:text-accent-red/80 transition-smooth">
+                    <button
+                      onClick={() => removeElevenlabsKey(index)}
+                      className="text-accent-red hover:text-accent-red/80 transition-smooth"
+                    >
                       <Trash2 size={18} />
                     </button>
                   </div>

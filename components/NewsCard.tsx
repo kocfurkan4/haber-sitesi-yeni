@@ -31,10 +31,10 @@ export default function NewsCard({ news }: NewsCardProps) {
   };
 
   return (
-    <div className="bg-military-800 rounded-xl shadow-lg hover:shadow-2xl transition-smooth p-6 border-2 border-military-700">
+    <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-smooth p-6 border-2 border-military-600">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
-        <h2 className="text-2xl font-bold text-gray-200 flex-1 pr-4">
+        <h2 className="text-2xl font-bold text-gray-900 flex-1 pr-4">
           {news.title}
         </h2>
         <div className="flex flex-col items-end space-y-2">
@@ -56,18 +56,18 @@ export default function NewsCard({ news }: NewsCardProps) {
       </div>
 
       {/* Meta Information */}
-      <div className="flex items-center space-x-4 text-sm text-gray-400 mb-4">
+      <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
         <span className="font-medium">{news.source}</span>
         <span>•</span>
         <span>{news.date}</span>
       </div>
 
       {/* Summary */}
-      <p className="text-gray-400 italic mb-4 leading-relaxed">{news.summary}</p>
+      <p className="text-gray-600 italic mb-4 leading-relaxed">{news.summary}</p>
 
       {/* Content */}
       <div className="mb-4">
-        <p className="text-gray-300 leading-relaxed">{news.content}</p>
+        <p className="text-gray-700 leading-relaxed">{news.content}</p>
       </div>
 
       {/* Tags */}
@@ -75,7 +75,7 @@ export default function NewsCard({ news }: NewsCardProps) {
         {news.tags.map((tag, index) => (
           <span
             key={index}
-            className="bg-military-700 text-accent-green px-3 py-1 rounded-md text-sm font-medium hover:bg-military-600 border border-military-600 transition-smooth"
+            className="bg-military-800 text-accent-green px-3 py-1 rounded-md text-sm font-medium hover:bg-military-700 border border-military-600 transition-smooth"
           >
             #{tag}
           </span>
@@ -83,13 +83,13 @@ export default function NewsCard({ news }: NewsCardProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t-2 border-military-700">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t-2 border-military-600">
         <div className="flex flex-wrap gap-3">
           <a
             href={news.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center space-x-2 text-accent-green hover:text-accent-yellow transition-smooth font-medium"
+            className="flex items-center space-x-2 text-accent-green hover:text-primary transition-smooth font-medium"
           >
             <ExternalLink size={18} />
             <span>🔗 Haberin Kaynağına Git</span>

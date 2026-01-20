@@ -30,7 +30,7 @@ export default function LoginPage() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-military-900 via-military-800 to-military-700">
       <div className="max-w-md w-full">
         {/* Login Card */}
-        <div className="bg-military-700 rounded-2xl shadow-2xl p-8 border-2 border-military-600">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-military-600">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-accent-green to-primary rounded-full mb-4 shadow-lg">
@@ -39,7 +39,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold text-accent-green mb-2">
               Admin Girişi
             </h1>
-            <p className="text-gray-400">
+            <p className="text-gray-700">
               Yönetim paneline erişmek için giriş yapın
             </p>
           </div>
@@ -57,7 +57,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="username"
-                className="block text-gray-300 font-semibold mb-2"
+                className="block text-gray-800 font-semibold mb-2"
               >
                 Kullanıcı Adı
               </label>
@@ -71,7 +71,7 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="admin"
-                  className="w-full pl-10 pr-4 py-3 bg-military-800 border-2 border-military-600 rounded-lg focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth text-gray-200 placeholder-gray-500"
+                  className="w-full pl-10 pr-4 py-3 bg-military-900 border-2 border-military-600 rounded-lg focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth text-gray-900 placeholder-gray-500"
                   required
                 />
               </div>
@@ -81,7 +81,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-gray-300 font-semibold mb-2"
+                className="block text-gray-800 font-semibold mb-2"
               >
                 Şifre
               </label>
@@ -95,7 +95,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-12 py-3 bg-military-800 border-2 border-military-600 rounded-lg focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth text-gray-200 placeholder-gray-500"
+                  className="w-full pl-10 pr-12 py-3 bg-military-900 border-2 border-military-600 rounded-lg focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth text-gray-900 placeholder-gray-500"
                   required
                 />
                 <button
@@ -115,11 +115,11 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-5 h-5 bg-military-800 border-military-600 rounded focus:ring-2 focus:ring-accent-green cursor-pointer"
+                className="w-5 h-5 bg-military-900 border-military-600 rounded focus:ring-2 focus:ring-accent-green cursor-pointer"
               />
               <label
                 htmlFor="remember-me"
-                className="ml-3 text-gray-300 font-medium cursor-pointer select-none"
+                className="ml-3 text-gray-800 font-medium cursor-pointer select-none"
               >
                 30 gün boyunca oturumu açık tut
               </label>
@@ -136,9 +136,9 @@ export default function LoginPage() {
           </form>
 
           {/* Info */}
-          <div className="mt-6 p-4 bg-military-800 rounded-lg border border-military-600">
-            <p className="text-gray-400 text-sm text-center">
-              <strong className="text-accent-yellow">Varsayılan giriş:</strong><br />
+          <div className="mt-6 p-4 bg-military-900 rounded-lg border border-military-600">
+            <p className="text-gray-700 text-sm text-center">
+              <strong className="text-accent-green">Varsayılan giriş:</strong><br />
               Kullanıcı: <code className="text-accent-green">admin</code><br />
               Şifre: <code className="text-accent-green">Axer2019*</code>
             </p>
@@ -147,7 +147,7 @@ export default function LoginPage() {
 
         {/* Additional Info */}
         <div className="mt-6 text-center">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-600 text-sm">
             Güvenli bağlantı ile korunmaktasınız 🔒
           </p>
         </div>

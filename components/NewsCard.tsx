@@ -1,14 +1,50 @@
 "use client";
 
 import { NewsItem } from "@/lib/mockData";
-import { ExternalLink, Eye, CheckCircle, XCircle } from "lucide-react";
+import { ExternalLink, Eye, CheckCircle, XCircle, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 interface NewsCardProps {
   news: NewsItem;
 }
 
 export default function NewsCard({ news }: NewsCardProps) {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const speakText = () => {
+    if (!('speechSynthesis' in window)) {
+      alert('Tarayıcınız ses sentezlemeyi desteklemiyor.');
+      return;
+    }
+
+    // Stop if already speaking
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Create speech utterance
+    const text = `${news.title}. ${news.summary}`;
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Set Turkish language
+    utterance.lang = 'tr-TR';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      alert('Ses oluşturma sırasında hata oluştu.');
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
       AI: "bg-purple-500",
@@ -94,6 +130,17 @@ export default function NewsCard({ news }: NewsCardProps) {
             <ExternalLink size={18} />
             <span>🔗 Haberin Kaynağına Git</span>
           </a>
+          <button
+            onClick={speakText}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-smooth font-medium shadow-md hover:shadow-lg ${
+              isSpeaking
+                ? 'bg-accent-red hover:bg-accent-red/80 text-white'
+                : 'bg-purple-500 hover:bg-purple-600 text-white'
+            }`}
+          >
+            {isSpeaking ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            <span>{isSpeaking ? '⏸️ Sesi Durdur' : '🔊 Sesi Oku'}</span>
+          </button>
           <Link
             href={`/preview/${news.id}`}
             className="flex items-center space-x-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition-smooth font-medium shadow-md hover:shadow-lg"

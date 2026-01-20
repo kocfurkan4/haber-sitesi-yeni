@@ -14,14 +14,22 @@ const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "Axer2019*";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Initialize from localStorage if available
+    if (typeof window !== 'undefined') {
+      const auth = localStorage.getItem("admin_authenticated");
+      return auth === "true";
+    }
+    return false;
+  });
 
   useEffect(() => {
+    // Double-check on mount
     const auth = localStorage.getItem("admin_authenticated");
-    if (auth === "true") {
+    if (auth === "true" && !isAuthenticated) {
       setIsAuthenticated(true);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const login = (username: string, password: string): boolean => {
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {

@@ -178,6 +178,15 @@ export default function PreviewPage() {
     }
   };
 
+  const saveChanges = () => {
+    // Add to history before saving
+    addToHistory();
+
+    // In a real application, you would save to a database here
+    // For now, we'll just show a confirmation
+    alert("Değişiklikler kaydedildi!");
+  };
+
   const copyToClipboard = () => {
     if (!news) return;
 
@@ -340,12 +349,11 @@ Link: ${news.sourceUrl}`;
               <span>İleri Al</span>
             </button>
             <button
-              onClick={translateNews}
-              disabled={isTranslating}
-              className="flex items-center justify-center space-x-2 bg-accent-green hover:bg-accent-green/80 text-white px-4 py-3 rounded-lg font-bold transition-smooth disabled:opacity-50"
+              onClick={saveChanges}
+              className="flex items-center justify-center space-x-2 bg-accent-green hover:bg-accent-green/80 text-white px-4 py-3 rounded-lg font-bold transition-smooth"
             >
               <Save size={18} />
-              <span>{isTranslating ? "Çevriliyor..." : "Kaydet"}</span>
+              <span>Kaydet</span>
             </button>
             <button
               onClick={copyToClipboard}

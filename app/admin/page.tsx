@@ -177,6 +177,10 @@ export default function AdminPage() {
   // Save rssFeeds to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("rssFeeds", JSON.stringify(rssFeeds));
+
+    // Also sync rssSources for homepage (array of URLs)
+    const rssSources = rssFeeds.map(feed => ({ url: feed.url, name: feed.name }));
+    localStorage.setItem("rssSources", JSON.stringify(rssSources));
   }, [rssFeeds]);
 
   if (!isAuthenticated) {
@@ -259,7 +263,10 @@ export default function AdminPage() {
   };
 
   const collectNewsFromRSS = async () => {
-    if (rssFeeds.length === 0) {
+    // Always read from localStorage to get the latest sources
+    const currentRssFeeds = JSON.parse(localStorage.getItem("rssFeeds") || "[]");
+
+    if (currentRssFeeds.length === 0) {
       alert("RSS kaynağı ekleyin!");
       return;
     }
@@ -274,7 +281,7 @@ export default function AdminPage() {
       let successCount = 0;
       let failCount = 0;
 
-      for (const feed of rssFeeds) {
+      for (const feed of currentRssFeeds) {
         try {
           setCollectionStatus(`${feed.name} kaynağından haberler çekiliyor...`);
 

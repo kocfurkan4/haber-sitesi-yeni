@@ -1,37 +1,55 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, LogIn, User, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, LogIn, User, Lock, Shield } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login attempt:", { username, rememberMe });
+    setError("");
+    
+    const success = login(username, password);
+    if (success) {
+      router.push("/admin");
+    } else {
+      setError("Kullanıcı adı veya şifre hatalı!");
+    }
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-military-900 via-military-800 to-military-700">
       <div className="max-w-md w-full">
         {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+        <div className="bg-military-700 rounded-2xl shadow-2xl p-8 border-2 border-military-600">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-full mb-4">
-              <LogIn size={32} className="text-white" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-accent-green to-primary rounded-full mb-4 shadow-lg">
+              <Shield size={32} className="text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Giriş Yap
+            <h1 className="text-3xl font-bold text-accent-green mb-2">
+              Admin Girişi
             </h1>
-            <p className="text-gray-600">
-              Teknoloji haberlerine erişmek için giriş yapın
+            <p className="text-gray-400">
+              Yönetim paneline erişmek için giriş yapın
             </p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 bg-accent-red/20 border-2 border-accent-red text-accent-red px-4 py-3 rounded-lg font-medium">
+              {error}
+            </div>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -39,21 +57,21 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="username"
-                className="block text-gray-700 font-semibold mb-2"
+                className="block text-gray-300 font-semibold mb-2"
               >
                 Kullanıcı Adı
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User size={20} className="text-gray-400" />
+                  <User size={20} className="text-gray-500" />
                 </div>
                 <input
                   id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="kullaniciadi"
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth text-gray-900 placeholder-gray-400"
+                  placeholder="admin"
+                  className="w-full pl-10 pr-4 py-3 bg-military-800 border-2 border-military-600 rounded-lg focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth text-gray-200 placeholder-gray-500"
                   required
                 />
               </div>
@@ -63,13 +81,13 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-gray-700 font-semibold mb-2"
+                className="block text-gray-300 font-semibold mb-2"
               >
                 Şifre
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock size={20} className="text-gray-400" />
+                  <Lock size={20} className="text-gray-500" />
                 </div>
                 <input
                   id="password"
@@ -77,13 +95,13 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-smooth text-gray-900 placeholder-gray-400"
+                  className="w-full pl-10 pr-12 py-3 bg-military-800 border-2 border-military-600 rounded-lg focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth text-gray-200 placeholder-gray-500"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-smooth"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-accent-green transition-smooth"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -97,11 +115,11 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-2 focus:ring-primary cursor-pointer"
+                className="w-5 h-5 bg-military-800 border-military-600 rounded focus:ring-2 focus:ring-accent-green cursor-pointer"
               />
               <label
                 htmlFor="remember-me"
-                className="ml-3 text-gray-700 font-medium cursor-pointer select-none"
+                className="ml-3 text-gray-300 font-medium cursor-pointer select-none"
               >
                 30 gün boyunca oturumu açık tut
               </label>
@@ -110,56 +128,27 @@ export default function LoginPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-bold py-4 px-6 rounded-lg transition-smooth flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              className="w-full bg-gradient-to-r from-accent-green to-primary hover:from-primary hover:to-accent-green text-white font-bold py-4 px-6 rounded-lg transition-smooth flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
             >
               <LogIn size={20} />
               <span>Giriş Yap</span>
             </button>
           </form>
 
-          {/* Forgot Password Link */}
-          <div className="mt-6 text-center">
-            <a
-              href="#"
-              className="text-primary hover:text-primary-dark font-medium transition-smooth"
-            >
-              Şifrenizi mi unuttunuz?
-            </a>
-          </div>
-
-          {/* Divider */}
-          <div className="my-6 flex items-center">
-            <div className="flex-1 border-t border-gray-300"></div>
-            <span className="px-4 text-gray-500 text-sm">veya</span>
-            <div className="flex-1 border-t border-gray-300"></div>
-          </div>
-
-          {/* Sign Up Link */}
-          <div className="text-center">
-            <p className="text-gray-600">
-              Hesabınız yok mu?{" "}
-              <a
-                href="#"
-                className="text-primary hover:text-primary-dark font-semibold transition-smooth"
-              >
-                Kayıt olun
-              </a>
+          {/* Info */}
+          <div className="mt-6 p-4 bg-military-800 rounded-lg border border-military-600">
+            <p className="text-gray-400 text-sm text-center">
+              <strong className="text-accent-yellow">Varsayılan giriş:</strong><br />
+              Kullanıcı: <code className="text-accent-green">admin</code><br />
+              Şifre: <code className="text-accent-green">Axer2019*</code>
             </p>
           </div>
         </div>
 
         {/* Additional Info */}
         <div className="mt-6 text-center">
-          <p className="text-gray-600 text-sm">
-            Giriş yaparak{" "}
-            <a href="#" className="text-primary hover:underline">
-              Kullanım Koşullarını
-            </a>{" "}
-            ve{" "}
-            <a href="#" className="text-primary hover:underline">
-              Gizlilik Politikasını
-            </a>{" "}
-            kabul etmiş olursunuz
+          <p className="text-gray-500 text-sm">
+            Güvenli bağlantı ile korunmaktasınız 🔒
           </p>
         </div>
       </div>

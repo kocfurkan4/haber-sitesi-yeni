@@ -1,0 +1,358 @@
+"use client";
+
+import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import {
+  ArrowLeft,
+  Undo2,
+  Redo2,
+  Save,
+  Copy,
+  Volume2,
+  Download,
+  Play,
+  Pause,
+  SkipBack,
+} from "lucide-react";
+import { mockNews } from "@/lib/mockData";
+import { useSettings } from "@/contexts/SettingsContext";
+
+export default function PreviewPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { geminiApiKey, elevenlabsApiKey } = useSettings();
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const newsId = params.id as string;
+  const news = mockNews.find((n) => n.id === newsId);
+
+  const [title, setTitle] = useState(news?.title || "");
+  const [summary, setSummary] = useState(news?.summary || "");
+  const [content, setContent] = useState(news?.content || "");
+  const [audioUrl, setAudioUrl] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioTime, setAudioTime] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+
+  const totalCharacters = title.length + summary.length + content.length;
+  const totalWords =
+    title.split(/\s+/).filter(Boolean).length +
+    summary.split(/\s+/).filter(Boolean).length +
+    content.split(/\s+/).filter(Boolean).length;
+
+  useEffect(() => {
+    if (!news) {
+      router.push("/haberler");
+    }
+  }, [news, router]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.addEventListener("timeupdate", handleTimeUpdate);
+      audioRef.current.addEventListener("loadedmetadata", handleLoadedMetadata);
+      return () => {
+        audioRef.current?.removeEventListener("timeupdate", handleTimeUpdate);
+        audioRef.current?.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      };
+    }
+  }, [audioUrl]);
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setAudioTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setAudioDuration(audioRef.current.duration);
+    }
+  };
+
+  const handlePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleRestart = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const translateNews = async () => {
+    if (!geminiApiKey) {
+      alert("Gemini API anahtarı girilmemiş! Lütfen Admin Panel'den ekleyin.");
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      // Simulated translation - Replace with actual Gemini API call
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Demo translation
+      setTitle("Çevrilmiş Başlık: " + title);
+      setSummary("Çevrilmiş Özet: " + summary);
+      setContent("Çevrilmiş İçerik: " + content);
+
+      alert("Haber başarıyla çevrildi!");
+    } catch (error) {
+      alert("Çeviri sırasında hata oluştu!");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const generateAudio = async () => {
+    if (!elevenlabsApiKey) {
+      alert("ElevenLabs API anahtarı girilmemiş! Lütfen Admin Panel'den ekleyin.");
+      return;
+    }
+
+    setIsGeneratingAudio(true);
+    try {
+      // Simulated audio generation - Replace with actual ElevenLabs API call
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Demo audio URL
+      setAudioUrl("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+
+      alert("Ses başarıyla oluşturuldu!");
+    } catch (error) {
+      alert("Ses oluşturma sırasında hata oluştu!");
+    } finally {
+      setIsGeneratingAudio(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert("Panoya kopyalandı!");
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  if (!news) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-military-900 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <button
+            onClick={() => router.push("/haberler")}
+            className="flex items-center space-x-2 text-accent-green hover:text-accent-yellow transition-smooth font-bold"
+          >
+            <ArrowLeft size={20} />
+            <span>← Haberlere Dön</span>
+          </button>
+        </div>
+
+        <div className="bg-military-800 rounded-xl p-6 border-2 border-military-700 shadow-xl mb-6">
+          <h1 className="text-3xl font-bold text-accent-green mb-4 flex items-center space-x-3">
+            <span>📝</span>
+            <span>Gönderim Öncesi Ön İzleme</span>
+          </h1>
+
+          {/* News Info */}
+          <div className="bg-primary/30 rounded-lg p-6 mb-6 border-2 border-primary">
+            <h2 className="text-2xl font-bold text-white mb-4">{news.title}</h2>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-400">📅</span>
+                <span className="text-gray-300">
+                  <strong>Tarih:</strong> {news.date}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-400">⭐</span>
+                <span className="text-gray-300">
+                  <strong>İlgi Puanı:</strong> {news.interestScore}/10
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-400">📂</span>
+                <span className="text-gray-300">
+                  <strong>Kategori:</strong> {news.category}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-400">📰</span>
+                <span className="text-gray-300">
+                  <strong>Kaynak:</strong> {news.source}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Sections */}
+          <div className="space-y-6">
+            {/* Title Section */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-bold text-gray-200">* BAŞLIK</h3>
+              </div>
+              <textarea
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full bg-military-700 border-2 border-military-600 rounded-lg p-4 text-gray-200 min-h-[80px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                placeholder="Haber başlığı..."
+              />
+            </div>
+
+            {/* Summary Section */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-bold text-gray-200">* ÖZET</h3>
+              </div>
+              <textarea
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                className="w-full bg-military-700 border-2 border-military-600 rounded-lg p-4 text-gray-200 min-h-[120px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                placeholder="Haber özeti..."
+              />
+            </div>
+
+            {/* Content Section */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-bold text-gray-200">* İÇERİK</h3>
+              </div>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="w-full bg-military-700 border-2 border-military-600 rounded-lg p-4 text-gray-200 min-h-[300px] focus:ring-2 focus:ring-accent-green focus:border-accent-green transition-smooth"
+                placeholder="Haber içeriği..."
+              />
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="mt-6 bg-military-700 rounded-lg p-6 border border-military-600">
+            <div className="grid grid-cols-2 gap-6 text-center">
+              <div>
+                <div className="text-4xl font-bold text-accent-blue mb-2">{totalCharacters}</div>
+                <div className="text-gray-400 font-medium">Toplam Karakter</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-accent-green mb-2">{totalWords}</div>
+                <div className="text-gray-400 font-medium">Toplam Kelime</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <button className="flex items-center justify-center space-x-2 bg-accent-yellow hover:bg-accent-yellow/80 text-military-900 px-4 py-3 rounded-lg font-bold transition-smooth">
+              <Undo2 size={18} />
+              <span>Geri Al</span>
+            </button>
+            <button className="flex items-center justify-center space-x-2 bg-accent-blue hover:bg-accent-blue/80 text-white px-4 py-3 rounded-lg font-bold transition-smooth">
+              <Redo2 size={18} />
+              <span>İleri Al</span>
+            </button>
+            <button
+              onClick={translateNews}
+              disabled={isTranslating}
+              className="flex items-center justify-center space-x-2 bg-accent-green hover:bg-accent-green/80 text-white px-4 py-3 rounded-lg font-bold transition-smooth disabled:opacity-50"
+            >
+              <Save size={18} />
+              <span>{isTranslating ? "Çevriliyor..." : "Kaydet"}</span>
+            </button>
+            <button
+              onClick={() => copyToClipboard(title + "\n\n" + summary + "\n\n" + content)}
+              className="flex items-center justify-center space-x-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg font-bold transition-smooth"
+            >
+              <Copy size={18} />
+              <span>Kopyala</span>
+            </button>
+            <button
+              onClick={generateAudio}
+              disabled={isGeneratingAudio}
+              className="flex items-center justify-center space-x-2 bg-pink-500 hover:bg-pink-600 text-white px-4 py-3 rounded-lg font-bold transition-smooth disabled:opacity-50"
+            >
+              <Volume2 size={18} />
+              <span>{isGeneratingAudio ? "Oluşturuluyor..." : "Ses Oluştur"}</span>
+            </button>
+            <button
+              disabled={!audioUrl}
+              className="flex items-center justify-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-bold transition-smooth disabled:opacity-50"
+            >
+              <Download size={18} />
+              <span>Ses Kopyala/İndir</span>
+            </button>
+          </div>
+
+          {/* Audio Player */}
+          {audioUrl && (
+            <div className="mt-6 bg-military-700 rounded-lg p-6 border border-military-600">
+              <div className="flex items-center space-x-4 mb-4">
+                <span className="text-purple-400">🎵</span>
+                <h3 className="text-lg font-bold text-gray-200">Audio Player</h3>
+              </div>
+
+              <audio ref={audioRef} src={audioUrl} className="hidden" />
+
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={handlePlayPause}
+                  className="bg-accent-green hover:bg-accent-green/80 text-white p-3 rounded-full transition-smooth"
+                >
+                  {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                </button>
+
+                <button
+                  onClick={handleRestart}
+                  className="bg-accent-yellow hover:bg-accent-yellow/80 text-military-900 p-3 rounded-full transition-smooth"
+                >
+                  <SkipBack size={24} />
+                </button>
+
+                <div className="flex-1">
+                  <input
+                    type="range"
+                    min="0"
+                    max={audioDuration || 100}
+                    value={audioTime}
+                    onChange={(e) => {
+                      if (audioRef.current) {
+                        audioRef.current.currentTime = Number(e.target.value);
+                      }
+                    }}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-sm text-gray-400 mt-1">
+                    <span>{formatTime(audioTime)}</span>
+                    <span>{formatTime(audioDuration)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Note */}
+        <div className="text-center text-gray-500 text-sm">
+          Teknoloji Haberleri Projesi © 2025
+        </div>
+      </div>
+    </div>
+  );
+}

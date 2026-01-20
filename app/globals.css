@@ -3,9 +3,11 @@
 @tailwind utilities;
 
 :root {
-  --primary: #1e3a8a;
-  --primary-dark: #1e40af;
-  --primary-light: #3b82f6;
+  --primary: #2d4a2b;
+  --primary-dark: #1f3520;
+  --primary-light: #3d5a3b;
+  --military-bg: #1a2318;
+  --military-surface: #253120;
 }
 
 * {
@@ -20,7 +22,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f3f4f6;
+  background-color: #1a2318;
+  color: #e5e7eb;
 }
 
 @layer utilities {

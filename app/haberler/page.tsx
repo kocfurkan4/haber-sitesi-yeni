@@ -2,31 +2,64 @@
 
 import { useState, useMemo, useEffect } from "react";
 import NewsCard from "@/components/NewsCard";
-import { mockNews } from "@/lib/mockData";
+import { NewsItem } from "@/lib/mockData";
+import Link from "next/link";
 
 export default function HaberlerPage() {
   const [showOnlyUnsent, setShowOnlyUnsent] = useState(false);
   const [selectedSource, setSelectedSource] = useState("all");
-  const [collectedNews, setCollectedNews] = useState<any[]>([]);
+  const [allNews, setAllNews] = useState<NewsItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasRssSources, setHasRssSources] = useState(true);
 
-  // Load collected news from localStorage
+  // Load news from localStorage (collected news)
   useEffect(() => {
-    const stored = localStorage.getItem("collectedNews");
-    if (stored) {
-      try {
-        setCollectedNews(JSON.parse(stored));
-      } catch (error) {
-        console.error("Error loading collected news:", error);
+    const loadNews = () => {
+      // First check if there are RSS sources configured
+      const rssFeeds = localStorage.getItem("rssFeeds");
+      if (!rssFeeds || JSON.parse(rssFeeds).length === 0) {
+        setHasRssSources(false);
+        setIsLoading(false);
+        return;
       }
-    }
+
+      // Load collected news from localStorage
+      const stored = localStorage.getItem("collectedNews");
+      if (stored) {
+        try {
+          const collected = JSON.parse(stored);
+          setAllNews(collected);
+          setHasRssSources(true);
+        } catch (error) {
+          console.error("Error loading collected news:", error);
+        }
+      } else {
+        // No collected news yet, but sources exist
+        setAllNews([]);
+        setHasRssSources(true);
+      }
+      setIsLoading(false);
+    };
+
+    loadNews();
+
+    // Listen for storage changes (when news is collected from admin panel)
+    const handleStorageChange = () => {
+      loadNews();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom event from admin panel
+    window.addEventListener('newsCollected', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('newsCollected', handleStorageChange);
+    };
   }, []);
 
-  // Combine mock news and collected news
-  const allNews = useMemo(() => {
-    return [...mockNews, ...collectedNews];
-  }, [collectedNews]);
-
-  // Tüm kaynakları al (hem mock hem collected'dan)
+  // Tüm kaynakları al
   const allSources = useMemo(() => {
     const sources = Array.from(new Set(allNews.map((news) => news.source)));
     return ["all", ...sources.sort()];
@@ -121,8 +154,47 @@ export default function HaberlerPage() {
 
       {/* News List */}
       <div className="space-y-6">
-        {filteredNews.length > 0 ? (
+        {isLoading ? (
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center border-2 border-military-600">
+            <div className="animate-pulse">
+              <div className="text-6xl mb-4">⏳</div>
+              <p className="text-gray-700 text-lg font-medium">Haberler yükleniyor...</p>
+            </div>
+          </div>
+        ) : !hasRssSources ? (
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center border-2 border-accent-red">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-accent-red mb-4">
+              RSS Kaynağı Bulunamadı!
+            </h2>
+            <p className="text-gray-700 text-lg mb-6">
+              Haber görebilmek için önce RSS kaynakları eklemeniz gerekiyor.
+            </p>
+            <Link
+              href="/admin"
+              className="inline-block bg-accent-green hover:bg-accent-green/80 text-white font-bold py-3 px-6 rounded-lg transition-smooth"
+            >
+              🛡️ Admin Panel&apos;e Git
+            </Link>
+          </div>
+        ) : filteredNews.length > 0 ? (
           filteredNews.map((news) => <NewsCard key={news.id} news={news} />)
+        ) : allNews.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center border-2 border-accent-yellow">
+            <div className="text-6xl mb-4">📡</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Henüz Haber Toplanmamış!
+            </h2>
+            <p className="text-gray-700 text-lg mb-6">
+              RSS kaynaklarınızdan haber toplamak için Admin Panel&apos;deki &quot;Manuel Haber Topla&quot; butonuna tıklayın.
+            </p>
+            <Link
+              href="/admin"
+              className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-smooth"
+            >
+              📰 Haber Topla
+            </Link>
+          </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center border-2 border-military-600">
             <p className="text-gray-700 text-lg">

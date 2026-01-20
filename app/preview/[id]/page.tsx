@@ -238,6 +238,42 @@ Link: ${news.sourceUrl}`;
     alert("Panoya kopyalandı!");
   };
 
+  const downloadAudio = () => {
+    if (!audioUrl) {
+      alert("Önce ses oluşturmanız gerekiyor!");
+      return;
+    }
+
+    try {
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = audioUrl;
+      link.download = `${title.substring(0, 50)}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      alert("Ses dosyası indiriliyor!");
+    } catch (error) {
+      console.error("Download error:", error);
+      alert("İndirme sırasında hata oluştu!");
+    }
+  };
+
+  const copyAudioUrl = () => {
+    if (!audioUrl) {
+      alert("Önce ses oluşturmanız gerekiyor!");
+      return;
+    }
+
+    try {
+      navigator.clipboard.writeText(audioUrl);
+      alert("Ses URL'si panoya kopyalandı!");
+    } catch (error) {
+      console.error("Copy error:", error);
+      alert("Kopyalama sırasında hata oluştu!");
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -405,11 +441,20 @@ Link: ${news.sourceUrl}`;
               <span>{isGeneratingAudio ? "Oluşturuluyor..." : "Ses Oluştur"}</span>
             </button>
             <button
+              onClick={downloadAudio}
+              disabled={!audioUrl}
+              className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-bold transition-smooth disabled:opacity-50"
+            >
+              <Download size={18} />
+              <span>Sesi İndir</span>
+            </button>
+            <button
+              onClick={copyAudioUrl}
               disabled={!audioUrl}
               className="flex items-center justify-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-bold transition-smooth disabled:opacity-50"
             >
-              <Download size={18} />
-              <span>Ses Kopyala/İndir</span>
+              <Copy size={18} />
+              <span>Ses URL Kopyala</span>
             </button>
           </div>
 

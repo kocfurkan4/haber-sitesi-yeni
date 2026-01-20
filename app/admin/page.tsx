@@ -312,6 +312,9 @@ export default function AdminPage() {
       // Save to localStorage
       localStorage.setItem("collectedNews", JSON.stringify(allCollectedArticles));
 
+      // Dispatch custom event to notify other pages
+      window.dispatchEvent(new Event('newsCollected'));
+
       setCollectionStatus(`Tamamlandı! ${successCount} kaynak başarılı, ${failCount} kaynak başarısız. Toplam ${allCollectedArticles.length} haber.`);
 
       setTimeout(() => {

@@ -93,6 +93,12 @@ export default function HaberlerPage() {
                   {source === "all" ? "Tüm Kaynaklar" : source}
                 </button>
               ))}
+              <button
+                onClick={() => alert("RSS kaynaklarından haberler toplanıyor...")}
+                className="px-4 py-2 rounded-lg font-medium transition-smooth border-2 bg-orange-500 text-white border-orange-500 hover:bg-orange-600"
+              >
+                📡 Manuel Haber Topla
+              </button>
             </div>
           </div>
         </div>

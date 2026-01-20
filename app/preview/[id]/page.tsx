@@ -115,6 +115,8 @@ export default function PreviewPage() {
   };
 
   const generateAudio = async () => {
+    console.log("ElevenLabs API Key:", elevenlabsApiKey);
+
     if (!elevenlabsApiKey) {
       alert("ElevenLabs API anahtarı girilmemiş! Lütfen Admin Panel'den ekleyin.");
       return;
@@ -147,7 +149,7 @@ export default function PreviewPage() {
 
 Tarih: ${news.date}
 
-Link: ${news.sourceUrl}`;
+Link: ${window.location.origin}/preview/${newsId}`;
 
     navigator.clipboard.writeText(formattedText);
     alert("Panoya kopyalandı!");

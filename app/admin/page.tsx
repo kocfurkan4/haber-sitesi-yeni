@@ -126,6 +126,57 @@ export default function AdminPage() {
     localStorage.setItem("elevenlabsKeys", JSON.stringify(elevenlabsKeys));
   }, [elevenlabsKeys]);
 
+  // Load filterKeywords from localStorage
+  useEffect(() => {
+    const storedKeywords = localStorage.getItem("filterKeywords");
+    if (storedKeywords) {
+      try {
+        setFilterKeywords(JSON.parse(storedKeywords));
+      } catch (error) {
+        console.error("Error loading filter keywords:", error);
+      }
+    }
+  }, []);
+
+  // Save filterKeywords to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("filterKeywords", JSON.stringify(filterKeywords));
+  }, [filterKeywords]);
+
+  // Load translationPairs from localStorage
+  useEffect(() => {
+    const storedPairs = localStorage.getItem("translationPairs");
+    if (storedPairs) {
+      try {
+        setTranslationPairs(JSON.parse(storedPairs));
+      } catch (error) {
+        console.error("Error loading translation pairs:", error);
+      }
+    }
+  }, []);
+
+  // Save translationPairs to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("translationPairs", JSON.stringify(translationPairs));
+  }, [translationPairs]);
+
+  // Load rssFeeds from localStorage
+  useEffect(() => {
+    const storedFeeds = localStorage.getItem("rssFeeds");
+    if (storedFeeds) {
+      try {
+        setRssFeeds(JSON.parse(storedFeeds));
+      } catch (error) {
+        console.error("Error loading RSS feeds:", error);
+      }
+    }
+  }, []);
+
+  // Save rssFeeds to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("rssFeeds", JSON.stringify(rssFeeds));
+  }, [rssFeeds]);
+
   if (!isAuthenticated) {
     return null;
   }
@@ -629,19 +680,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Save Button */}
-        <div className="mt-8">
-          <button
-            onClick={() => {
-              saveSettings();
-              alert("Ayarlar kaydedildi!");
-            }}
-            className="w-full bg-gradient-to-r from-accent-green to-primary hover:from-primary hover:to-accent-green text-white font-bold py-4 px-6 rounded-lg transition-smooth flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
-          >
-            <Save size={24} />
-            <span>Tüm Ayarları Kaydet</span>
-          </button>
-        </div>
       </div>
     </div>
   );

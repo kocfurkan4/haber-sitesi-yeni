@@ -1,10 +1,10 @@
-// app/page.tsx - Ana Haberler Sayfası
+// app/page.tsx - Veri Senkronizasyonu ve Filtreleme Düzeltmesi
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import NewsCard from '@/components/NewsCard';
+import NewsCard from '../components/NewsCard'; // NewsCard'ın doğru yolu varsayılmıştır
 
-// Haber verisi tipi (NewsCard ile aynı olmalı)
+// Haber verisi tipi
 interface NewsItem {
   id: string;
   title: string;
@@ -20,7 +20,8 @@ interface NewsItem {
 const getSourcesFromStorage = (): string[] => {
   if (typeof window !== 'undefined') {
     const storedSources = localStorage.getItem('rssSources');
-    return storedSources ? JSON.parse(storedSources) : [];
+    // Sadece URL'leri döndür
+    return storedSources ? JSON.parse(storedSources).map((s: any) => s.url) : [];
   }
   return [];
 };
@@ -44,8 +45,7 @@ const HomePage: React.FC = () => {
     }
 
     try {
-      // Next.js API Route'a istek at
-      const response = await fetch('/api/news', {
+      const response = await fetch('/api/parse-rss', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,14 +54,24 @@ const HomePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Haberler sunucudan çekilemedi.');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Haberler sunucudan çekilemedi (HTTP Hata).');
       }
 
       const data: NewsItem[] = await response.json();
-      setNews(data.map(item => ({
+
+      if (!Array.isArray(data)) {
+        throw new Error('Sunucudan geçersiz veri formatı alındı.');
+      }
+
+      // Sadece aktif kaynaklardan gelen haberleri göster
+      const activeSources = sources.map(url => new URL(url).hostname);
+      const synchronizedNews = data.filter(item => activeSources.includes(item.source));
+
+      setNews(synchronizedNews.map(item => ({
         ...item,
-        score: Math.floor(Math.random() * 5) + 6, // Örnek puanlama (6-10 arası)
-        isSent: Math.random() > 0.5, // Örnek gönderim durumu
+        score: item.score || Math.floor(Math.random() * 5) + 6,
+        isSent: item.isSent || Math.random() > 0.5,
       })));
     } catch (err) {
       console.error('Haber çekme hatası:', err);
@@ -81,7 +91,7 @@ const HomePage: React.FC = () => {
   };
 
   // Filtrelenmiş Haberler
-  const filteredNews = activeFilter
+  const filteredNews = Array.isArray(news) && activeFilter
     ? news.filter(item => item.source === activeFilter)
     : news;
 
@@ -110,7 +120,7 @@ const HomePage: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredNews.map(item => (
+        {Array.isArray(filteredNews) && filteredNews.map(item => (
           <NewsCard key={item.id} item={item} onFilter={handleFilter} />
         ))}
       </div>

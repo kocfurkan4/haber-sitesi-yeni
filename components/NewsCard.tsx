@@ -1,172 +1,156 @@
-"use client";
+// components/NewsCard.tsx - Kapsamlı Haber Kartı Bileşeni
+'use client';
 
-import { NewsItem } from "@/lib/mockData";
-import { ExternalLink, Eye, CheckCircle, XCircle, Volume2, VolumeX } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
+import React, { useState, useCallback } from 'react';
+import { Download, Copy, Languages, Volume2, Filter } from 'lucide-react';
 
-interface NewsCardProps {
-  news: NewsItem;
+// Haber verisi tipi
+interface NewsItem {
+  id: string;
+  title: string;
+  link: string;
+  pubDate: string;
+  content: string;
+  source: string;
+  score: number;
+  isSent: boolean;
 }
 
-export default function NewsCard({ news }: NewsCardProps) {
+interface NewsCardProps {
+  item?: NewsItem;
+  news?: any; // For backward compatibility with old interface
+  onFilter?: (source: string) => void;
+}
+
+// Basit bir çeviri fonksiyonu (Gerçekte API çağrısı yapılmalı)
+// Bu örnekte, sadece Türkçe ve İngilizce arasında geçiş yapacak bir mock fonksiyon kullanıyoruz.
+const mockTranslate = (text: string, targetLang: 'tr' | 'en') => {
+  if (targetLang === 'tr') {
+    // İngilizce olduğunu varsayarak Türkçe çeviri döndür
+    return `[TR Çeviri] ${text}`;
+  }
+  // Türkçe olduğunu varsayarak İngilizce çeviri döndür
+  return `[EN Translation] ${text}`;
+};
+
+const NewsCard: React.FC<NewsCardProps> = ({ item, news, onFilter }) => {
+  const [isTranslated, setIsTranslated] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const speakText = () => {
-    if (!('speechSynthesis' in window)) {
-      alert('Tarayıcınız ses sentezlemeyi desteklemiyor.');
-      return;
+  // Seslendirme Fonksiyonu (Web Speech API)
+  const speakText = useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'tr-TR'; // Türkçe seslendirme
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert('Tarayıcınız sesli okumayı desteklemiyor.');
     }
+  }, []);
 
-    // Stop if already speaking
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
-    }
+  // Use either item or news (backward compatibility)
+  const newsItem = item || news;
 
-    // Create speech utterance
-    const text = `${news.title}. ${news.summary}`;
-    const utterance = new SpeechSynthesisUtterance(text);
+  if (!newsItem) {
+    return null;
+  }
 
-    // Set Turkish language
-    utterance.lang = 'tr-TR';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      alert('Ses oluşturma sırasında hata oluştu.');
-    };
-
-    window.speechSynthesis.speak(utterance);
+  // Ses İndirme Fonksiyonu (Web Speech API ile doğrudan dosya indirmek mümkün değildir,
+  // bu yüzden kullanıcıya kopyalama seçeneği sunulur veya bir API'ye yönlendirilir.)
+  const handleDownload = () => {
+    // Gerçek bir indirme için bir TTS API'sine (örn. Google Cloud TTS) ihtiyaç vardır.
+    // Bu örnekte, kullanıcıya metni kopyalamasını öneriyoruz.
+    alert('Doğrudan ses dosyası indirme, harici bir API gerektirir. Metin panoya kopyalandı.');
+    navigator.clipboard.writeText(newsItem.content || newsItem.summary || '');
   };
 
-  const getCategoryColor = (category: string) => {
-    const colors: { [key: string]: string } = {
-      AI: "bg-purple-500",
-      Hardware: "bg-accent-blue",
-      Computing: "bg-accent-green",
-      Automotive: "bg-accent-red",
-      Social: "bg-pink-500",
-      Software: "bg-indigo-500",
-      Network: "bg-accent-yellow",
-      Entertainment: "bg-orange-500",
-    };
-    return colors[category] || "bg-gray-500";
+  // Metin Kopyalama Fonksiyonu
+  const handleCopy = () => {
+    navigator.clipboard.writeText(newsItem.content || newsItem.summary || '');
+    alert('Haber içeriği panoya kopyalandı.');
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 9) return "bg-accent-green";
-    if (score >= 7) return "bg-accent-blue";
-    if (score >= 5) return "bg-accent-yellow";
-    return "bg-gray-500";
+  // Çeviri Fonksiyonu
+  const toggleTranslation = () => {
+    setIsTranslated(prev => !prev);
   };
+
+  const displayTitle = isTranslated ? mockTranslate(newsItem.title, 'tr') : newsItem.title;
+  const displayContent = isTranslated ? mockTranslate(newsItem.content || newsItem.summary || '', 'tr') : (newsItem.content || newsItem.summary || '');
+  const translationLang = isTranslated ? 'EN' : 'TR';
 
   return (
-    <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-smooth p-6 border-2 border-military-600">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
-        <h2 className="text-2xl font-bold text-gray-900 flex-1 pr-4">
-          {news.title}
-        </h2>
-        <div className="flex flex-col items-end space-y-2">
-          <span
-            className={`${getScoreColor(
-              news.interestScore
-            )} text-white px-3 py-1 rounded-full text-sm font-semibold shadow-md`}
-          >
-            {news.interestScore}/10
-          </span>
-          <span
-            className={`${getCategoryColor(
-              news.category
-            )} text-white px-3 py-1 rounded-full text-xs font-medium shadow-md`}
-          >
-            {news.category}
-          </span>
-        </div>
-      </div>
-
-      {/* Meta Information */}
-      <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
-        <span className="font-medium">{news.source}</span>
-        <span>•</span>
-        <span>{news.date}</span>
-      </div>
-
-      {/* Summary */}
-      <p className="text-gray-600 italic mb-4 leading-relaxed">{news.summary}</p>
-
-      {/* Content */}
-      <div className="mb-4">
-        <p className="text-gray-700 leading-relaxed">{news.content}</p>
-      </div>
-
-      {/* Tags */}
-      {news.tags && Array.isArray(news.tags) && news.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {news.tags.map((tag, index) => (
-            <span
-              key={index}
-              className="bg-military-800 text-accent-green px-3 py-1 rounded-md text-sm font-medium hover:bg-military-700 border border-military-600 transition-smooth"
+    <div className="bg-white p-4 rounded-xl shadow-md mb-4 border border-gray-200">
+      <h2 className="text-xl font-bold mb-2">{displayTitle}</h2>
+      <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
+        <span className="font-medium">Kaynak:
+          {onFilter && (
+            <button
+              onClick={() => onFilter(newsItem.source)}
+              className="text-blue-600 hover:text-blue-800 ml-1 underline flex items-center"
+              aria-label={`Filtrele: ${newsItem.source}`}
             >
-              #{tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t-2 border-military-600">
-        <div className="flex flex-wrap gap-3">
-          <a
-            href={news.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center space-x-2 text-accent-green hover:text-primary transition-smooth font-medium"
-          >
-            <ExternalLink size={18} />
-            <span>🔗 Haberin Kaynağına Git</span>
-          </a>
-          <button
-            onClick={speakText}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-smooth font-medium shadow-md hover:shadow-lg ${
-              isSpeaking
-                ? 'bg-accent-red hover:bg-accent-red/80 text-white'
-                : 'bg-purple-500 hover:bg-purple-600 text-white'
-            }`}
-          >
-            {isSpeaking ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            <span>{isSpeaking ? '⏸️ Sesi Durdur' : '🔊 Sesi Oku'}</span>
-          </button>
-          <Link
-            href={`/preview/${news.id}`}
-            className="flex items-center space-x-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition-smooth font-medium shadow-md hover:shadow-lg"
-          >
-            <Eye size={18} />
-            <span>📝 Gönderim Öncesi Ön İzleme</span>
-          </Link>
-        </div>
-
-        {/* Status */}
-        <div className="flex items-center space-x-2">
-          {news.isSent ? (
-            <>
-              <CheckCircle size={20} className="text-accent-green" />
-              <span className="text-accent-green font-semibold">✓ Gönderildi</span>
-            </>
-          ) : (
-            <>
-              <XCircle size={20} className="text-accent-red" />
-              <span className="text-accent-red font-semibold">✗ Gönderilmedi</span>
-            </>
+              {newsItem.source} <Filter size={14} className="ml-1" />
+            </button>
           )}
-        </div>
+          {!onFilter && <span className="ml-1">{newsItem.source}</span>}
+        </span>
+        {newsItem.score !== undefined && (
+          <span>Puan: <span className="font-bold text-green-600">{newsItem.score}/10</span></span>
+        )}
+        {newsItem.interestScore !== undefined && (
+          <span>Puan: <span className="font-bold text-green-600">{newsItem.interestScore}/10</span></span>
+        )}
+        <span>Tarih: {new Date(newsItem.pubDate || newsItem.date).toLocaleDateString()}</span>
+      </div>
+
+      <p className="text-gray-700 mb-4">{displayContent}</p>
+
+      <div className="flex space-x-3 text-sm">
+        <a href={newsItem.link || newsItem.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center">
+          🔗 Haberin Kaynağına Git
+        </a>
+
+        {/* Aksiyon Butonları */}
+        <button
+          onClick={toggleTranslation}
+          className="text-purple-600 hover:text-purple-800 flex items-center"
+          aria-label={`Haber içeriğini ${translationLang} diline çevir`}
+        >
+          <Languages size={16} className="mr-1" /> Çevir ({translationLang})
+        </button>
+
+        <button
+          onClick={() => speakText(displayContent)}
+          className={`flex items-center ${isSpeaking ? 'text-red-500' : 'text-green-600 hover:text-green-800'}`}
+          aria-label={isSpeaking ? 'Seslendirme durduruluyor...' : 'Seslendir'}
+        >
+          <Volume2 size={16} className="mr-1" /> Seslendir
+        </button>
+
+        <button
+          onClick={handleDownload}
+          className="text-gray-600 hover:text-gray-800 flex items-center"
+          aria-label="Ses dosyasını indir"
+        >
+          <Download size={16} className="mr-1" /> İndir
+        </button>
+
+        <button
+          onClick={handleCopy}
+          className="text-gray-600 hover:text-gray-800 flex items-center"
+          aria-label="Haber içeriğini kopyala"
+        >
+          <Copy size={16} className="mr-1" /> Kopyala
+        </button>
       </div>
     </div>
   );
-}
+};
+
+export default NewsCard;

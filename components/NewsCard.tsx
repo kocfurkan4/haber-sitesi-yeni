@@ -107,16 +107,18 @@ export default function NewsCard({ news }: NewsCardProps) {
       </div>
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {news.tags.map((tag, index) => (
-          <span
-            key={index}
-            className="bg-military-800 text-accent-green px-3 py-1 rounded-md text-sm font-medium hover:bg-military-700 border border-military-600 transition-smooth"
-          >
-            #{tag}
-          </span>
-        ))}
-      </div>
+      {news.tags && Array.isArray(news.tags) && news.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {news.tags.map((tag, index) => (
+            <span
+              key={index}
+              className="bg-military-800 text-accent-green px-3 py-1 rounded-md text-sm font-medium hover:bg-military-700 border border-military-600 transition-smooth"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t-2 border-military-600">

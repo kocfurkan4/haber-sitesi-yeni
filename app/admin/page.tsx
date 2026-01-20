@@ -286,27 +286,40 @@ export default function AdminPage() {
             body: JSON.stringify({ url: feed.url }),
           });
 
-          if (response.ok) {
-            const data = await response.json();
+          const data = await response.json();
 
-            // Filter out duplicates based on sourceUrl
-            const newArticles = data.articles.filter((article: any) => {
-              return !allCollectedArticles.some(
-                (existing: any) => existing.sourceUrl === article.sourceUrl
-              );
-            });
+          // Check if data is valid and has articles
+          if (data && data.articles && Array.isArray(data.articles)) {
+            if (data.articles.length > 0) {
+              // Filter out duplicates based on sourceUrl
+              const newArticles = data.articles.filter((article: any) => {
+                return !allCollectedArticles.some(
+                  (existing: any) => existing.sourceUrl === article.sourceUrl
+                );
+              });
 
-            allCollectedArticles = [...allCollectedArticles, ...newArticles];
-            successCount++;
-            setCollectionStatus(`${feed.name}: ${newArticles.length} yeni haber eklendi`);
+              allCollectedArticles = [...allCollectedArticles, ...newArticles];
+              successCount++;
+              setCollectionStatus(`${feed.name}: ${newArticles.length} yeni haber eklendi`);
+            } else {
+              // No articles found but no error
+              setCollectionStatus(`${feed.name}: Yeni haber bulunamadı`);
+              successCount++;
+            }
           } else {
+            // Invalid response format
             failCount++;
-            console.error(`Failed to fetch from ${feed.name}`);
+            console.error(`Invalid response from ${feed.name}:`, data.error || "Bilinmeyen hata");
+            setCollectionStatus(`${feed.name}: Hata - ${data.error || "Geçersiz yanıt"}`);
           }
-        } catch (error) {
+        } catch (error: any) {
           failCount++;
           console.error(`Error fetching from ${feed.name}:`, error);
+          setCollectionStatus(`${feed.name}: Bağlantı hatası`);
         }
+
+        // Small delay between requests to avoid overwhelming the server
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       // Save to localStorage

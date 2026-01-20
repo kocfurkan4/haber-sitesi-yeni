@@ -15,30 +15,61 @@ export default function HaberlerPage() {
   // Load news from localStorage (collected news)
   useEffect(() => {
     const loadNews = () => {
-      // First check if there are RSS sources configured
-      const rssFeeds = localStorage.getItem("rssFeeds");
-      if (!rssFeeds || JSON.parse(rssFeeds).length === 0) {
+      try {
+        // First check if there are RSS sources configured
+        const rssFeeds = localStorage.getItem("rssFeeds");
+        if (!rssFeeds) {
+          setHasRssSources(false);
+          setIsLoading(false);
+          return;
+        }
+
+        let parsedFeeds = [];
+        try {
+          parsedFeeds = JSON.parse(rssFeeds);
+        } catch (e) {
+          console.error("Error parsing RSS feeds:", e);
+          setHasRssSources(false);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!Array.isArray(parsedFeeds) || parsedFeeds.length === 0) {
+          setHasRssSources(false);
+          setIsLoading(false);
+          return;
+        }
+
+        // Load collected news from localStorage
+        const stored = localStorage.getItem("collectedNews");
+        if (stored) {
+          try {
+            const collected = JSON.parse(stored);
+            // Ensure it's an array
+            if (Array.isArray(collected)) {
+              setAllNews(collected);
+            } else {
+              console.error("Collected news is not an array");
+              setAllNews([]);
+            }
+            setHasRssSources(true);
+          } catch (error) {
+            console.error("Error loading collected news:", error);
+            setAllNews([]);
+            setHasRssSources(true);
+          }
+        } else {
+          // No collected news yet, but sources exist
+          setAllNews([]);
+          setHasRssSources(true);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error in loadNews:", error);
+        setAllNews([]);
         setHasRssSources(false);
         setIsLoading(false);
-        return;
       }
-
-      // Load collected news from localStorage
-      const stored = localStorage.getItem("collectedNews");
-      if (stored) {
-        try {
-          const collected = JSON.parse(stored);
-          setAllNews(collected);
-          setHasRssSources(true);
-        } catch (error) {
-          console.error("Error loading collected news:", error);
-        }
-      } else {
-        // No collected news yet, but sources exist
-        setAllNews([]);
-        setHasRssSources(true);
-      }
-      setIsLoading(false);
     };
 
     loadNews();

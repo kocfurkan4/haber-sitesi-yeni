@@ -85,6 +85,8 @@ export default function AdminPage() {
   const [newGeminiKeyValue, setNewGeminiKeyValue] = useState("");
   const [newElevenlabsKeyName, setNewElevenlabsKeyName] = useState("");
   const [newElevenlabsKeyValue, setNewElevenlabsKeyValue] = useState("");
+  const [isCollectingNews, setIsCollectingNews] = useState(false);
+  const [collectionStatus, setCollectionStatus] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -254,6 +256,77 @@ export default function AdminPage() {
 
   const showElevenlabsKeyDetails = (key: { name: string; value: string }) => {
     alert(`Anahtar Adı: ${key.name}\nAnahtar Değeri: ${key.value}`);
+  };
+
+  const collectNewsFromRSS = async () => {
+    if (rssFeeds.length === 0) {
+      alert("RSS kaynağı ekleyin!");
+      return;
+    }
+
+    setIsCollectingNews(true);
+    setCollectionStatus("Haberler toplanıyor...");
+
+    try {
+      // Get existing news from localStorage
+      const existingNews = JSON.parse(localStorage.getItem("collectedNews") || "[]");
+      let allCollectedArticles = [...existingNews];
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const feed of rssFeeds) {
+        try {
+          setCollectionStatus(`${feed.name} kaynağından haberler çekiliyor...`);
+
+          const response = await fetch("/api/parse-rss", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url: feed.url }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+
+            // Filter out duplicates based on sourceUrl
+            const newArticles = data.articles.filter((article: any) => {
+              return !allCollectedArticles.some(
+                (existing: any) => existing.sourceUrl === article.sourceUrl
+              );
+            });
+
+            allCollectedArticles = [...allCollectedArticles, ...newArticles];
+            successCount++;
+            setCollectionStatus(`${feed.name}: ${newArticles.length} yeni haber eklendi`);
+          } else {
+            failCount++;
+            console.error(`Failed to fetch from ${feed.name}`);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`Error fetching from ${feed.name}:`, error);
+        }
+      }
+
+      // Save to localStorage
+      localStorage.setItem("collectedNews", JSON.stringify(allCollectedArticles));
+
+      setCollectionStatus(`Tamamlandı! ${successCount} kaynak başarılı, ${failCount} kaynak başarısız. Toplam ${allCollectedArticles.length} haber.`);
+
+      setTimeout(() => {
+        setIsCollectingNews(false);
+        setCollectionStatus("");
+      }, 3000);
+
+    } catch (error) {
+      console.error("Error collecting news:", error);
+      setCollectionStatus("Hata oluştu!");
+      setTimeout(() => {
+        setIsCollectingNews(false);
+        setCollectionStatus("");
+      }, 3000);
+    }
   };
 
   return (
@@ -477,13 +550,28 @@ export default function AdminPage() {
 
         {/* RSS Kaynakları */}
         <div className="bg-white rounded-xl p-6 border-2 border-military-600 shadow-xl mt-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Rss className="text-orange-500" size={24} />
-            <h2 className="text-2xl font-bold text-gray-900">RSS Kaynakları</h2>
-            <span className="bg-orange-500/20 text-orange-500 px-3 py-1 rounded-full text-sm font-bold">
-              {rssFeeds.length}
-            </span>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <Rss className="text-orange-500" size={24} />
+              <h2 className="text-2xl font-bold text-gray-900">RSS Kaynakları</h2>
+              <span className="bg-orange-500/20 text-orange-500 px-3 py-1 rounded-full text-sm font-bold">
+                {rssFeeds.length}
+              </span>
+            </div>
+            <button
+              onClick={collectNewsFromRSS}
+              disabled={isCollectingNews}
+              className="flex items-center space-x-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-bold transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Newspaper size={20} />
+              <span>{isCollectingNews ? "Toplanıyor..." : "Manuel Haber Topla"}</span>
+            </button>
           </div>
+          {collectionStatus && (
+            <div className="mb-4 bg-accent-blue/10 border-l-4 border-accent-blue px-4 py-3 rounded">
+              <p className="text-accent-blue font-medium">{collectionStatus}</p>
+            </div>
+          )}
           <p className="text-gray-700 text-sm mb-4">Haber çekmek için RSS feed kaynakları</p>
 
           {/* Add New RSS Feed */}

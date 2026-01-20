@@ -155,24 +155,58 @@ export default function PreviewPage() {
   };
 
   const generateAudio = async () => {
-    console.log("ElevenLabs API Key:", elevenlabsApiKey);
+    // Get ElevenLabs keys from localStorage
+    const storedKeys = localStorage.getItem("elevenlabsKeys");
+    let apiKey = elevenlabsApiKey;
 
-    if (!elevenlabsApiKey) {
+    if (storedKeys) {
+      try {
+        const keys = JSON.parse(storedKeys);
+        if (keys.length > 0) {
+          // Select a random key for load balancing
+          const randomKey = keys[Math.floor(Math.random() * keys.length)];
+          apiKey = randomKey.value;
+        }
+      } catch (error) {
+        console.error("Error parsing ElevenLabs keys:", error);
+      }
+    }
+
+    if (!apiKey) {
       alert("ElevenLabs API anahtarı girilmemiş! Lütfen Admin Panel'den ekleyin.");
       return;
     }
 
+    console.log("ElevenLabs API Key:", apiKey);
+
     setIsGeneratingAudio(true);
     try {
-      // Simulated audio generation - Replace with actual ElevenLabs API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Combine title, summary, and content for audio
+      const textToConvert = `${title}\n\n${summary}\n\n${content}`;
 
-      // Demo audio URL
-      setAudioUrl("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+      const response = await fetch("/api/generate-audio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: textToConvert,
+          apiKey: apiKey,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Ses oluşturulamadı");
+      }
+
+      const data = await response.json();
+      setAudioUrl(data.audioUrl);
 
       alert("Ses başarıyla oluşturuldu!");
-    } catch (error) {
-      alert("Ses oluşturma sırasında hata oluştu!");
+    } catch (error: any) {
+      console.error("Audio generation error:", error);
+      alert("Ses oluşturma sırasında hata oluştu: " + error.message);
     } finally {
       setIsGeneratingAudio(false);
     }

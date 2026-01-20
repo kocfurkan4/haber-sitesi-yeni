@@ -1,21 +1,39 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import NewsCard from "@/components/NewsCard";
 import { mockNews } from "@/lib/mockData";
 
 export default function HaberlerPage() {
   const [showOnlyUnsent, setShowOnlyUnsent] = useState(false);
   const [selectedSource, setSelectedSource] = useState("all");
+  const [collectedNews, setCollectedNews] = useState<any[]>([]);
 
-  // Tüm kaynakları al
-  const allSources = useMemo(() => {
-    const sources = Array.from(new Set(mockNews.map((news) => news.source)));
-    return ["all", ...sources];
+  // Load collected news from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("collectedNews");
+    if (stored) {
+      try {
+        setCollectedNews(JSON.parse(stored));
+      } catch (error) {
+        console.error("Error loading collected news:", error);
+      }
+    }
   }, []);
 
+  // Combine mock news and collected news
+  const allNews = useMemo(() => {
+    return [...mockNews, ...collectedNews];
+  }, [collectedNews]);
+
+  // Tüm kaynakları al (hem mock hem collected'dan)
+  const allSources = useMemo(() => {
+    const sources = Array.from(new Set(allNews.map((news) => news.source)));
+    return ["all", ...sources.sort()];
+  }, [allNews]);
+
   const filteredNews = useMemo(() => {
-    let filtered = mockNews;
+    let filtered = allNews;
 
     // Kaynak filtreleme
     if (selectedSource !== "all") {
@@ -27,8 +45,11 @@ export default function HaberlerPage() {
       filtered = filtered.filter((news) => !news.isSent);
     }
 
-    return filtered;
-  }, [showOnlyUnsent, selectedSource]);
+    // Sort by date (newest first)
+    return filtered.sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  }, [showOnlyUnsent, selectedSource, allNews]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -93,12 +114,6 @@ export default function HaberlerPage() {
                   {source === "all" ? "Tüm Kaynaklar" : source}
                 </button>
               ))}
-              <button
-                onClick={() => alert("RSS kaynaklarından haberler toplanıyor...")}
-                className="px-4 py-2 rounded-lg font-medium transition-smooth border-2 bg-orange-500 text-white border-orange-500 hover:bg-orange-600"
-              >
-                📡 Manuel Haber Topla
-              </button>
             </div>
           </div>
         </div>

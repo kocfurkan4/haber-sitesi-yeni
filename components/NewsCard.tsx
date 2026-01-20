@@ -62,6 +62,14 @@ const NewsCard: React.FC<NewsCardProps> = ({ item, news, onFilter }) => {
       return;
     }
 
+    // localStorage'dan Gemini API anahtarını al
+    const geminiApiKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') : null;
+
+    if (!geminiApiKey) {
+      setTranslationError('API anahtarı bulunamadı. Lütfen Ayarlar sayfasından Gemini API anahtarınızı ekleyin.');
+      return;
+    }
+
     setIsTranslating(true);
     setTranslationError(null);
 
@@ -75,11 +83,13 @@ const NewsCard: React.FC<NewsCardProps> = ({ item, news, onFilter }) => {
         body: JSON.stringify({
           text: newsItem.title,
           targetLang: 'tr',
+          apiKey: geminiApiKey, // API anahtarını body'de gönder
         }),
       });
 
       if (!titleResponse.ok) {
-        throw new Error('Başlık çevirisi başarısız oldu.');
+        const errorData = await titleResponse.json();
+        throw new Error(errorData.error || 'Başlık çevirisi başarısız oldu.');
       }
 
       const titleData = await titleResponse.json();
@@ -94,11 +104,13 @@ const NewsCard: React.FC<NewsCardProps> = ({ item, news, onFilter }) => {
         body: JSON.stringify({
           text: contentText,
           targetLang: 'tr',
+          apiKey: geminiApiKey, // API anahtarını body'de gönder
         }),
       });
 
       if (!contentResponse.ok) {
-        throw new Error('İçerik çevirisi başarısız oldu.');
+        const errorData = await contentResponse.json();
+        throw new Error(errorData.error || 'İçerik çevirisi başarısız oldu.');
       }
 
       const contentData = await contentResponse.json();
@@ -107,9 +119,9 @@ const NewsCard: React.FC<NewsCardProps> = ({ item, news, onFilter }) => {
         title: titleData.translatedText,
         content: contentData.translatedText,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Çeviri hatası:', error);
-      setTranslationError('Çeviri şu an yapılamıyor. Lütfen API anahtarını kontrol edin.');
+      setTranslationError(error.message || 'Çeviri şu an yapılamıyor. Lütfen API anahtarını kontrol edin.');
     } finally {
       setIsTranslating(false);
     }

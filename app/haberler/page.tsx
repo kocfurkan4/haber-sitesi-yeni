@@ -209,7 +209,23 @@ export default function HaberlerPage() {
             </Link>
           </div>
         ) : filteredNews.length > 0 ? (
-          filteredNews.map((news) => <NewsCard key={news.id} news={news} />)
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredNews.map((news) => (
+              <NewsCard
+                key={news.id}
+                item={{
+                  id: news.id,
+                  title: news.title,
+                  link: news.sourceUrl || '#',
+                  pubDate: news.date,
+                  content: news.content || news.summary || '',
+                  source: news.source,
+                  score: news.interestScore || 7,
+                  isSent: news.isSent || false
+                }}
+              />
+            ))}
+          </div>
         ) : allNews.length === 0 ? (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center border-2 border-accent-yellow">
             <div className="text-6xl mb-4">📡</div>

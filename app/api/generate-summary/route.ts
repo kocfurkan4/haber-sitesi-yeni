@@ -19,9 +19,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Gemini API'ye istek at (server-side, güvenli)
-    // Model: gemini-pro (stable, kararlı versiyon)
+    // DOĞRU URL: Tam yol, model ismi "gemini-1.5-flash" (öneksiz)
+    const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+      `${GEMINI_API_URL}?key=${apiKey}`,
       {
         method: 'POST',
         headers: {

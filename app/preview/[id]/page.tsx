@@ -159,7 +159,7 @@ Link: ${currentState.link}`;
       }
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: {
@@ -170,21 +170,35 @@ Link: ${currentState.link}`;
               {
                 parts: [
                   {
-                    text: `Lütfen aşağıdaki haberin kısa bir özetini çıkar (maksimum 2-3 cümle):\n\n${currentState.content}`,
+                    text: `Lütfen aşağıdaki haberin kısa bir özetini çıkar. Sadece özet metnini yaz, başlık veya etiket ekleme. Maksimum 2-3 cümle:\n\n${currentState.content}`,
                   },
                 ],
               },
             ],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 200,
+            },
           }),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Gemini API hatası");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Gemini API Error:", errorData);
+        throw new Error(errorData.error?.message || "Gemini API hatası");
       }
 
       const data = await response.json();
-      const summary = data.candidates[0]?.content?.parts[0]?.text || "";
+      let summary = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+      // Clean up the summary - remove any markdown formatting or extra labels
+      summary = summary
+        .replace(/^#+\s*/gm, "") // Remove markdown headers
+        .replace(/^\*\*.*?\*\*:?\s*/gm, "") // Remove bold labels
+        .replace(/^Özet:?\s*/gi, "") // Remove "Özet:" prefix
+        .replace(/^Summary:?\s*/gi, "") // Remove "Summary:" prefix
+        .trim();
 
       updateField("summary", summary);
     } catch (error) {

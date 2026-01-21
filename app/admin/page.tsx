@@ -764,7 +764,7 @@ export default function AdminPage() {
                 ✨ Birden fazla anahtar eklerseniz, biri başarısız olduğunda otomatik olarak diğeri denenir!
               </span>
               <span className="block mt-1 text-gray-600 text-xs">
-                Tüm anahtarlar Vercel KV'de güvenli şekilde saklanır. Cache sistemi sayesinde API kullanımı minimumda tutulur.
+                Tüm anahtarlar Vercel KV&apos;de güvenli şekilde saklanır. Cache sistemi sayesinde API kullanımı minimumda tutulur.
               </span>
             </p>
 
@@ -840,7 +840,7 @@ export default function AdminPage() {
                 ✨ Birden fazla anahtar eklerseniz, biri başarısız olduğunda otomatik olarak diğeri denenir!
               </span>
               <span className="block mt-1 text-gray-600 text-xs">
-                Tüm anahtarlar Vercel KV'de güvenli şekilde saklanır. Cache sistemi sayesinde aynı metin için tekrar ses oluşturulmaz.
+                Tüm anahtarlar Vercel KV&apos;de güvenli şekilde saklanır. Cache sistemi sayesinde aynı metin için tekrar ses oluşturulmaz.
               </span>
             </p>
 

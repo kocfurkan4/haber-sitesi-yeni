@@ -5,8 +5,15 @@ const NEWS_KEY = 'collected_news';
 
 export async function GET() {
   try {
+    console.log('📰 GET /api/news-storage - Haberler yükleniyor...');
+
     // Vercel KV'den haberleri çek
     const news = await kv.get<any[]>(NEWS_KEY);
+
+    console.log('✅ Haberler yüklendi:', {
+      count: (news || []).length,
+      hasData: !!news
+    });
 
     return NextResponse.json({
       success: true,
@@ -14,9 +21,13 @@ export async function GET() {
       count: (news || []).length
     });
   } catch (error: any) {
-    console.error('Failed to get news from KV:', error);
+    console.error('❌ Failed to get news from KV:', error);
     return NextResponse.json(
-      { error: error.message || 'Haberler alınamadı' },
+      {
+        success: false,
+        error: error.message || 'Haberler alınamadı',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
@@ -25,6 +36,10 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const { news: newArticles } = await req.json();
+
+    console.log('💾 POST /api/news-storage - Haberler kaydediliyor:', {
+      receivedCount: newArticles?.length
+    });
 
     if (!Array.isArray(newArticles)) {
       return NextResponse.json(
@@ -35,6 +50,7 @@ export async function POST(req: NextRequest) {
 
     // Mevcut haberleri al
     const existingNews = await kv.get<any[]>(NEWS_KEY) || [];
+    console.log('📊 Mevcut haber sayısı:', existingNews.length);
 
     let addedCount = 0;
     let updatedCount = 0;
@@ -68,6 +84,12 @@ export async function POST(req: NextRequest) {
     // Vercel KV'ye kaydet
     await kv.set(NEWS_KEY, updatedNews);
 
+    console.log('✅ Haberler Vercel KV\'ye kaydedildi:', {
+      added: addedCount,
+      updated: updatedCount,
+      total: updatedNews.length
+    });
+
     return NextResponse.json({
       success: true,
       added: addedCount,
@@ -75,9 +97,13 @@ export async function POST(req: NextRequest) {
       total: updatedNews.length
     });
   } catch (error: any) {
-    console.error('Failed to save news to KV:', error);
+    console.error('❌ Failed to save news to KV:', error);
     return NextResponse.json(
-      { error: error.message || 'Haberler kaydedilemedi' },
+      {
+        success: false,
+        error: error.message || 'Haberler kaydedilemedi',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

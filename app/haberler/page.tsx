@@ -12,9 +12,9 @@ export default function HaberlerPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasRssSources, setHasRssSources] = useState(true);
 
-  // Load news from localStorage (collected news)
+  // Load news from Vercel KV (primary source)
   useEffect(() => {
-    const loadNews = () => {
+    const loadNews = async () => {
       try {
         // First check if there are RSS sources configured
         const rssFeeds = localStorage.getItem("rssFeeds");
@@ -40,7 +40,23 @@ export default function HaberlerPage() {
           return;
         }
 
-        // Load collected news from localStorage
+        // Load collected news from Vercel KV (primary source)
+        try {
+          const response = await fetch('/api/news-storage');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && Array.isArray(data.news)) {
+              setAllNews(data.news);
+              setHasRssSources(true);
+              setIsLoading(false);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error loading from Vercel KV:', error);
+        }
+
+        // Fallback to localStorage if KV fails
         const stored = localStorage.getItem("collectedNews");
         if (stored) {
           try {

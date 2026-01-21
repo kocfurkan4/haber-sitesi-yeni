@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X, Shield, LogOut } from "lucide-react";
 import { useState } from "react";
@@ -29,10 +30,20 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center space-x-2 text-accent-green font-bold text-xl hover:text-primary transition-smooth"
+            className="flex items-center space-x-3 text-accent-green font-bold text-xl hover:text-primary transition-smooth group"
           >
-            <span>📰</span>
-            <span>Piyade Haberleri</span>
+            <div className="relative w-10 h-10 transition-transform group-hover:scale-110">
+              <Image
+                src="/logo.svg"
+                alt="Piyade Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+                priority
+              />
+            </div>
+            <span className="hidden sm:inline">Piyade Haberleri</span>
+            <span className="sm:hidden">Piyade</span>
           </Link>
 
           {/* Desktop Navigation */}

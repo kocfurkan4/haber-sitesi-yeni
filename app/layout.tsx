@@ -4,8 +4,13 @@ import Navbar from "@/components/Navbar";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Piyade - Piyade Haberleri",
-  description: "En güncel piyade haberlerini takip edin",
+  title: "Piyade - Savunma Sanayi Haberleri",
+  description: "En güncel savunma sanayi ve piyade haberlerini takip edin",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 const Footer = () => (

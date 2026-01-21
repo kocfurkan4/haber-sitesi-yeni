@@ -305,8 +305,25 @@ export default function AdminPage() {
     setCollectionStatus("Haberler toplanıyor...");
 
     try {
-      // Get existing news from localStorage
-      const existingNews = JSON.parse(localStorage.getItem("collectedNews") || "[]");
+      // Get existing news from Vercel KV (primary source)
+      let existingNews: any[] = [];
+      try {
+        const kvResponse = await fetch('/api/news-storage');
+        if (kvResponse.ok) {
+          const kvData = await kvResponse.json();
+          existingNews = kvData.news || [];
+          console.log('Loaded from Vercel KV:', existingNews.length, 'articles');
+        } else {
+          // Fallback to localStorage
+          existingNews = JSON.parse(localStorage.getItem("collectedNews") || "[]");
+          console.warn('KV unavailable, using localStorage');
+        }
+      } catch (error) {
+        // Fallback to localStorage
+        existingNews = JSON.parse(localStorage.getItem("collectedNews") || "[]");
+        console.error('Error loading from KV:', error);
+      }
+
       let allCollectedArticles = [...existingNews];
       let successCount = 0;
       let failCount = 0;
@@ -380,10 +397,28 @@ export default function AdminPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      // Save to both localStorage and IndexedDB
+      // Save to Vercel KV (primary storage)
+      try {
+        const kvResponse = await fetch('/api/news-storage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ news: allCollectedArticles }),
+        });
+
+        if (kvResponse.ok) {
+          const kvData = await kvResponse.json();
+          console.log('Saved to Vercel KV:', kvData);
+        } else {
+          console.error('Failed to save to Vercel KV');
+        }
+      } catch (error) {
+        console.error('Error saving to Vercel KV:', error);
+      }
+
+      // Backup to localStorage
       localStorage.setItem("collectedNews", JSON.stringify(allCollectedArticles));
 
-      // Also save to IndexedDB for persistence
+      // Also save to IndexedDB for cache persistence
       const { storage } = await import("@/lib/storage");
       await storage.setItem("collectedNews", allCollectedArticles);
 

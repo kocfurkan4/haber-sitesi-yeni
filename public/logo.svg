@@ -1,0 +1,45 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="95" fill="#1a1a1a" stroke="#00ff88" stroke-width="3"/>
+  
+  <!-- Outer Target Ring -->
+  <circle cx="100" cy="100" r="75" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.3"/>
+  
+  <!-- Middle Target Ring -->
+  <circle cx="100" cy="100" r="55" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+  
+  <!-- Inner Target Ring -->
+  <circle cx="100" cy="100" r="35" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.7"/>
+  
+  <!-- Center Circle -->
+  <circle cx="100" cy="100" r="15" fill="#00ff88"/>
+  
+  <!-- Crosshair - Horizontal -->
+  <line x1="20" y1="100" x2="85" y2="100" stroke="#00ff88" stroke-width="2.5"/>
+  <line x1="115" y1="100" x2="180" y2="100" stroke="#00ff88" stroke-width="2.5"/>
+  
+  <!-- Crosshair - Vertical -->
+  <line x1="100" y1="20" x2="100" y2="85" stroke="#00ff88" stroke-width="2.5"/>
+  <line x1="100" y1="115" x2="100" y2="180" stroke="#00ff88" stroke-width="2.5"/>
+  
+  <!-- Arrow/Sight indicator (top-right) -->
+  <path d="M 140 60 L 155 45 L 160 50 L 145 65 Z" fill="#00ff88" opacity="0.8"/>
+  <path d="M 155 45 L 170 45 L 160 50 Z" fill="#00ff88" opacity="0.8"/>
+  <path d="M 155 45 L 155 30 L 160 50 Z" fill="#00ff88" opacity="0.8"/>
+  
+  <!-- Small corner brackets (targeting UI) -->
+  <!-- Top-left -->
+  <path d="M 25 40 L 25 25 L 40 25" stroke="#00ff88" stroke-width="2" fill="none"/>
+  
+  <!-- Top-right -->
+  <path d="M 160 25 L 175 25 L 175 40" stroke="#00ff88" stroke-width="2" fill="none"/>
+  
+  <!-- Bottom-left -->
+  <path d="M 40 175 L 25 175 L 25 160" stroke="#00ff88" stroke-width="2" fill="none"/>
+  
+  <!-- Bottom-right -->
+  <path d="M 175 160 L 175 175 L 160 175" stroke="#00ff88" stroke-width="2" fill="none"/>
+  
+  <!-- Center dot -->
+  <circle cx="100" cy="100" r="3" fill="#1a1a1a"/>
+</svg>

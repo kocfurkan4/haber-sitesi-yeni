@@ -32,46 +32,64 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  // RSS Kaynaklarını Çekme Fonksiyonu
+  // Haberleri Vercel KV'den Yükleme Fonksiyonu
   const fetchNews = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const sources = getSourcesFromStorage();
-
-    if (sources.length === 0) {
-      setNews([]);
-      setLoading(false);
-      return;
-    }
 
     try {
-      const response = await fetch('/api/news', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ urls: sources }),
-      });
+      // Önce Vercel KV'den haberleri çek
+      const response = await fetch('/api/news-storage');
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Haberler sunucudan çekilemedi (HTTP Hata).');
+        throw new Error('Haberler Vercel KV\'den yüklenemedi.');
       }
 
-      const data: NewsItem[] = await response.json();
+      const data = await response.json();
 
-      if (!Array.isArray(data)) {
-        throw new Error('Sunucudan geçersiz veri formatı alındı.');
+      if (!data.success || !Array.isArray(data.news)) {
+        throw new Error('Geçersiz veri formatı alındı.');
       }
 
-      setNews(data.map(item => ({
-        ...item,
+      // Haberleri tarihe göre sırala (en yeni en üstte)
+      const sortedNews = data.news.sort((a: any, b: any) =>
+        new Date(b.pubDate || b.date).getTime() - new Date(a.pubDate || a.date).getTime()
+      );
+
+      setNews(sortedNews.map((item: any) => ({
+        id: item.id || item.sourceUrl,
+        title: item.title,
+        link: item.sourceUrl || item.link,
+        pubDate: item.pubDate || item.date,
+        content: item.content,
+        source: item.source,
         score: item.score || Math.floor(Math.random() * 5) + 6,
-        isSent: item.isSent || Math.random() > 0.5,
+        isSent: item.isSent || false,
       })));
     } catch (err) {
       console.error('Haber çekme hatası:', err);
-      setError('Haberler yüklenirken bir sorun oluştu. Lütfen kaynaklarınızı kontrol edin.');
+
+      // Fallback: localStorage'dan yükle
+      try {
+        const localNews = localStorage.getItem('collectedNews');
+        if (localNews) {
+          const parsedNews = JSON.parse(localNews);
+          setNews(parsedNews.map((item: any) => ({
+            id: item.id || item.sourceUrl,
+            title: item.title,
+            link: item.sourceUrl || item.link,
+            pubDate: item.pubDate || item.date,
+            content: item.content,
+            source: item.source,
+            score: item.score || Math.floor(Math.random() * 5) + 6,
+            isSent: item.isSent || false,
+          })));
+        } else {
+          setError('Haberler yüklenirken bir sorun oluştu. Lütfen Admin panelinden haber toplayın.');
+        }
+      } catch (localErr) {
+        setError('Haberler yüklenirken bir sorun oluştu. Lütfen Admin panelinden haber toplayın.');
+      }
     } finally {
       setLoading(false);
     }

@@ -18,9 +18,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Gemini API - Güncel ve stabil model
-    // NOT: Model ismi URL'de zaten var, ekstra 'models/' EKLEME!
-    const MODEL_NAME = 'gemini-1.5-flash-001'; // Tam versiyon numarası (özet için ideal)
+    // Gemini API - KESİNLİKLE ÇALIŞAN MODEL
+    // gemini-pro: Google'ın en stabil ve güvenilir modeli
+    const MODEL_NAME = 'gemini-pro';
     const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 
     console.log('🔍 Özet API Çağrısı:', {

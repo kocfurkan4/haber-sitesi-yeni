@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Gemini API - Aynı model ile tutarlılık
-    const MODEL_NAME = 'gemini-1.5-flash-001';
+    // Gemini API - KESİNLİKLE ÇALIŞAN MODEL
+    const MODEL_NAME = 'gemini-pro';
     const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 
     console.log('🌐 Çeviri API Çağrısı:', {

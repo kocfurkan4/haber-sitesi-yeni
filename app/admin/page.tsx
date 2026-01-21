@@ -262,6 +262,76 @@ export default function AdminPage() {
     alert(`Anahtar Adı: ${key.name}\nAnahtar Değeri: ${key.value}`);
   };
 
+  // Export all settings to JSON file
+  const exportSettings = () => {
+    const settings = {
+      geminiKeys,
+      elevenlabsKeys,
+      filterKeywords,
+      translationPairs,
+      rssFeeds,
+      exportDate: new Date().toISOString(),
+    };
+
+    const dataStr = JSON.stringify(settings, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `piyade-ayarlar-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    alert("Ayarlar başarıyla dışa aktarıldı!");
+  };
+
+  // Import settings from JSON file
+  const importSettings = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const settings = JSON.parse(content);
+
+        // Validate and import each setting
+        if (settings.geminiKeys && Array.isArray(settings.geminiKeys)) {
+          setGeminiKeys(settings.geminiKeys);
+          localStorage.setItem("geminiKeys", JSON.stringify(settings.geminiKeys));
+        }
+
+        if (settings.elevenlabsKeys && Array.isArray(settings.elevenlabsKeys)) {
+          setElevenlabsKeys(settings.elevenlabsKeys);
+          localStorage.setItem("elevenlabsKeys", JSON.stringify(settings.elevenlabsKeys));
+        }
+
+        if (settings.filterKeywords && Array.isArray(settings.filterKeywords)) {
+          setFilterKeywords(settings.filterKeywords);
+          localStorage.setItem("filterKeywords", JSON.stringify(settings.filterKeywords));
+        }
+
+        if (settings.translationPairs && Array.isArray(settings.translationPairs)) {
+          setTranslationPairs(settings.translationPairs);
+          localStorage.setItem("translationPairs", JSON.stringify(settings.translationPairs));
+        }
+
+        if (settings.rssFeeds && Array.isArray(settings.rssFeeds)) {
+          setRssFeeds(settings.rssFeeds);
+          localStorage.setItem("rssFeeds", JSON.stringify(settings.rssFeeds));
+        }
+
+        alert("Ayarlar başarıyla içe aktarıldı!");
+      } catch (error) {
+        console.error("Import error:", error);
+        alert("Ayarlar dosyası geçersiz! Lütfen doğru bir dosya seçin.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const collectNewsFromRSS = async () => {
     // Always read from localStorage to get the latest sources
     const currentRssFeeds = JSON.parse(localStorage.getItem("rssFeeds") || "[]");
@@ -378,11 +448,40 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-accent-green flex items-center space-x-3">
-            <span>🛡️</span>
-            <span>Admin Panel</span>
-          </h1>
-          <p className="text-gray-700 mt-2">Sistem ayarlarını ve yapılandırmalarını yönetin</p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold text-accent-green flex items-center space-x-3">
+                <span>🛡️</span>
+                <span>Admin Panel</span>
+              </h1>
+              <p className="text-gray-700 mt-2">Sistem ayarlarını ve yapılandırmalarını yönetin</p>
+            </div>
+
+            {/* Export/Import Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Export Button */}
+              <button
+                onClick={exportSettings}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium shadow-lg"
+                title="Ayarları Dışa Aktar"
+              >
+                <Save size={18} />
+                <span>Ayarları Dışa Aktar</span>
+              </button>
+
+              {/* Import Button */}
+              <label className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-medium shadow-lg cursor-pointer">
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importSettings}
+                  className="hidden"
+                />
+                <Eye size={18} />
+                <span>Ayarları İçe Aktar</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

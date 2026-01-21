@@ -87,6 +87,8 @@ export default function AdminPage() {
   const [newElevenlabsKeyValue, setNewElevenlabsKeyValue] = useState("");
   const [isCollectingNews, setIsCollectingNews] = useState(false);
   const [collectionStatus, setCollectionStatus] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string>("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -94,28 +96,53 @@ export default function AdminPage() {
     }
   }, [isAuthenticated, router]);
 
-  // Load Gemini keys from localStorage
+  // Load settings from API on mount
   useEffect(() => {
-    const storedKeys = localStorage.getItem("geminiKeys");
-    if (storedKeys) {
+    const loadSettings = async () => {
       try {
-        setGeminiKeys(JSON.parse(storedKeys));
-      } catch (error) {
-        console.error("Error loading Gemini keys:", error);
-      }
-    }
-  }, []);
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const data = await response.json();
 
-  // Load ElevenLabs keys from localStorage
-  useEffect(() => {
-    const storedKeys = localStorage.getItem("elevenlabsKeys");
-    if (storedKeys) {
-      try {
-        setElevenlabsKeys(JSON.parse(storedKeys));
+          // Update state from API
+          if (data.geminiKeys) setGeminiKeys(data.geminiKeys);
+          if (data.elevenlabsKeys) setElevenlabsKeys(data.elevenlabsKeys);
+          if (data.filterKeywords) setFilterKeywords(data.filterKeywords);
+          if (data.translationPairs) setTranslationPairs(data.translationPairs);
+          if (data.rssFeeds) setRssFeeds(data.rssFeeds);
+
+          // Also update localStorage for backward compatibility
+          localStorage.setItem("geminiKeys", JSON.stringify(data.geminiKeys || []));
+          localStorage.setItem("elevenlabsKeys", JSON.stringify(data.elevenlabsKeys || []));
+          localStorage.setItem("filterKeywords", JSON.stringify(data.filterKeywords || []));
+          localStorage.setItem("translationPairs", JSON.stringify(data.translationPairs || []));
+          localStorage.setItem("rssFeeds", JSON.stringify(data.rssFeeds || []));
+
+          setLastSyncTime(new Date().toLocaleTimeString('tr-TR'));
+        } else {
+          // Fallback to localStorage if API fails
+          console.warn('API failed, loading from localStorage');
+          const storedGemini = localStorage.getItem("geminiKeys");
+          if (storedGemini) setGeminiKeys(JSON.parse(storedGemini));
+
+          const storedElevenlabs = localStorage.getItem("elevenlabsKeys");
+          if (storedElevenlabs) setElevenlabsKeys(JSON.parse(storedElevenlabs));
+
+          const storedKeywords = localStorage.getItem("filterKeywords");
+          if (storedKeywords) setFilterKeywords(JSON.parse(storedKeywords));
+
+          const storedPairs = localStorage.getItem("translationPairs");
+          if (storedPairs) setTranslationPairs(JSON.parse(storedPairs));
+
+          const storedFeeds = localStorage.getItem("rssFeeds");
+          if (storedFeeds) setRssFeeds(JSON.parse(storedFeeds));
+        }
       } catch (error) {
-        console.error("Error loading ElevenLabs keys:", error);
+        console.error('Failed to load settings:', error);
       }
-    }
+    };
+
+    loadSettings();
   }, []);
 
   // Save Gemini keys to localStorage whenever they change

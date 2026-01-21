@@ -89,6 +89,7 @@ export default function AdminPage() {
   const [collectionStatus, setCollectionStatus] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -96,27 +97,32 @@ export default function AdminPage() {
     }
   }, [isAuthenticated, router]);
 
-  // Load settings from API on mount
+  // Load settings from API on mount (single source of truth)
   useEffect(() => {
     const loadSettings = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch('/api/settings');
         if (response.ok) {
           const data = await response.json();
 
-          // Update state from API
+          // Update state from API (Vercel KV is the source of truth)
           if (data.geminiKeys) setGeminiKeys(data.geminiKeys);
           if (data.elevenlabsKeys) setElevenlabsKeys(data.elevenlabsKeys);
           if (data.filterKeywords) setFilterKeywords(data.filterKeywords);
           if (data.translationPairs) setTranslationPairs(data.translationPairs);
           if (data.rssFeeds) setRssFeeds(data.rssFeeds);
 
-          // Also update localStorage for backward compatibility
+          // Backup to localStorage for faster access on other pages
           localStorage.setItem("geminiKeys", JSON.stringify(data.geminiKeys || []));
           localStorage.setItem("elevenlabsKeys", JSON.stringify(data.elevenlabsKeys || []));
           localStorage.setItem("filterKeywords", JSON.stringify(data.filterKeywords || []));
           localStorage.setItem("translationPairs", JSON.stringify(data.translationPairs || []));
           localStorage.setItem("rssFeeds", JSON.stringify(data.rssFeeds || []));
+
+          // Also sync rssSources for homepage
+          const rssSources = (data.rssFeeds || []).map((feed: any) => ({ url: feed.url, name: feed.name }));
+          localStorage.setItem("rssSources", JSON.stringify(rssSources));
 
           setLastSyncTime(new Date().toLocaleTimeString('tr-TR'));
         } else {
@@ -139,84 +145,24 @@ export default function AdminPage() {
         }
       } catch (error) {
         console.error('Failed to load settings:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadSettings();
-  }, []);
-
-  // Save Gemini keys to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("geminiKeys", JSON.stringify(geminiKeys));
-  }, [geminiKeys]);
-
-  // Save ElevenLabs keys to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("elevenlabsKeys", JSON.stringify(elevenlabsKeys));
-  }, [elevenlabsKeys]);
-
-  // Load filterKeywords from localStorage
-  useEffect(() => {
-    const storedKeywords = localStorage.getItem("filterKeywords");
-    if (storedKeywords) {
-      try {
-        setFilterKeywords(JSON.parse(storedKeywords));
-      } catch (error) {
-        console.error("Error loading filter keywords:", error);
-      }
+    if (isAuthenticated) {
+      loadSettings();
     }
-  }, []);
+  }, [isAuthenticated]);
 
-  // Save filterKeywords to localStorage whenever they change
+  // Auto-save to API whenever settings change (consolidated save pattern)
   useEffect(() => {
-    localStorage.setItem("filterKeywords", JSON.stringify(filterKeywords));
-  }, [filterKeywords]);
+    // Don't save during initial load
+    if (isLoading) return;
 
-  // Load translationPairs from localStorage
-  useEffect(() => {
-    const storedPairs = localStorage.getItem("translationPairs");
-    if (storedPairs) {
+    const saveSettings = async () => {
+      setIsSyncing(true);
       try {
-        setTranslationPairs(JSON.parse(storedPairs));
-      } catch (error) {
-        console.error("Error loading translation pairs:", error);
-      }
-    }
-  }, []);
-
-  // Save translationPairs to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("translationPairs", JSON.stringify(translationPairs));
-  }, [translationPairs]);
-
-  // Load rssFeeds from localStorage
-  useEffect(() => {
-    const storedFeeds = localStorage.getItem("rssFeeds");
-    if (storedFeeds) {
-      try {
-        setRssFeeds(JSON.parse(storedFeeds));
-      } catch (error) {
-        console.error("Error loading RSS feeds:", error);
-      }
-    }
-  }, []);
-
-  // Save rssFeeds to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("rssFeeds", JSON.stringify(rssFeeds));
-
-    // Also sync rssSources for homepage (array of URLs)
-    const rssSources = rssFeeds.map(feed => ({ url: feed.url, name: feed.name }));
-    localStorage.setItem("rssSources", JSON.stringify(rssSources));
-  }, [rssFeeds]);
-
-  // Auto-sync to IndexedDB whenever settings change (for persistence)
-  useEffect(() => {
-    const syncToIndexedDB = async () => {
-      try {
-        const { storage } = await import("@/lib/storage");
-
-        // Sync all settings to IndexedDB
         const settings = {
           geminiKeys,
           elevenlabsKeys,
@@ -225,18 +171,46 @@ export default function AdminPage() {
           rssFeeds,
         };
 
-        for (const [key, value] of Object.entries(settings)) {
-          await storage.setItem(key, value);
+        // Save to Vercel KV (source of truth)
+        const response = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        });
+
+        if (response.ok) {
+          // Backup to localStorage for faster access on other pages
+          localStorage.setItem("geminiKeys", JSON.stringify(geminiKeys));
+          localStorage.setItem("elevenlabsKeys", JSON.stringify(elevenlabsKeys));
+          localStorage.setItem("filterKeywords", JSON.stringify(filterKeywords));
+          localStorage.setItem("translationPairs", JSON.stringify(translationPairs));
+          localStorage.setItem("rssFeeds", JSON.stringify(rssFeeds));
+
+          // Also sync rssSources for homepage
+          const rssSources = rssFeeds.map(feed => ({ url: feed.url, name: feed.name }));
+          localStorage.setItem("rssSources", JSON.stringify(rssSources));
+
+          // Sync to IndexedDB for cache persistence
+          const { storage } = await import("@/lib/storage");
+          for (const [key, value] of Object.entries(settings)) {
+            await storage.setItem(key, value);
+          }
+
+          setLastSyncTime(new Date().toLocaleTimeString('tr-TR'));
+        } else {
+          console.error('Failed to save settings to API');
         }
       } catch (error) {
-        console.error("Failed to sync to IndexedDB:", error);
+        console.error('Failed to save settings:', error);
+      } finally {
+        setIsSyncing(false);
       }
     };
 
-    // Debounce the sync (wait 1 second after last change)
-    const timer = setTimeout(syncToIndexedDB, 1000);
+    // Debounce: wait 2 seconds after last change before saving
+    const timer = setTimeout(saveSettings, 2000);
     return () => clearTimeout(timer);
-  }, [geminiKeys, elevenlabsKeys, filterKeywords, translationPairs, rssFeeds]);
+  }, [geminiKeys, elevenlabsKeys, filterKeywords, translationPairs, rssFeeds, isLoading]);
 
   if (!isAuthenticated) {
     return null;

@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
+/**
+ * POST /api/generate-summary
+ * Google Gemini SDK ile haber özeti oluşturur
+ * URL sorunları SDK tarafından otomatik çözülür
+ */
 export async function POST(req: NextRequest) {
   try {
     const { content, apiKey } = await req.json();
@@ -18,70 +24,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Gemini API - KESİNLİKLE ÇALIŞAN MODEL
-    // gemini-pro: Google'ın en stabil ve güvenilir modeli
-    const MODEL_NAME = 'gemini-pro';
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
-
-    console.log('🔍 Özet API Çağrısı:', {
-      url: GEMINI_API_URL,
+    console.log('🔍 Özet API Çağrısı (Google SDK):', {
       contentLength: content.length,
       apiKeyPrefix: apiKey.substring(0, 10) + '...'
     });
 
-    const requestBody = {
-      contents: [
-        {
-          parts: [
-            {
-              text: `Lütfen aşağıdaki haberin kısa bir özetini çıkar. Sadece özet metnini yaz, başlık veya etiket ekleme. Maksimum 2-3 cümle:\n\n${content}`,
-            },
-          ],
-        },
-      ],
+    // Google Generative AI SDK kullan (URL derdi yok!)
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 200,
-      },
-    };
-
-    const response = await fetch(
-      `${GEMINI_API_URL}?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
       }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('❌ Gemini API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData
-      });
-
-      return NextResponse.json(
-        {
-          error: errorData.error?.message || `Gemini API hatası (${response.status})`,
-          details: errorData,
-          model: MODEL_NAME,
-          url: GEMINI_API_URL
-        },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    console.log('✅ Gemini API Başarılı:', {
-      model: MODEL_NAME,
-      candidatesCount: data.candidates?.length
     });
 
-    let summary = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const prompt = `Lütfen aşağıdaki haberin kısa bir özetini çıkar. Sadece özet metnini yaz, başlık veya etiket ekleme. Maksimum 2-3 cümle:\n\n${content}`;
+
+    // Özet oluştur
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    let summary = response.text();
+
+    console.log('✅ Gemini SDK Başarılı:', {
+      model: 'gemini-1.5-flash',
+      summaryLength: summary.length
+    });
 
     // Clean up the summary
     summary = summary
@@ -91,13 +59,26 @@ export async function POST(req: NextRequest) {
       .replace(/^Summary:?\s*/gi, '') // Remove "Summary:" prefix
       .trim();
 
-    return NextResponse.json({ summary, model: MODEL_NAME });
+    return NextResponse.json({
+      summary,
+      model: 'gemini-1.5-flash',
+      method: 'Google SDK'
+    });
+
   } catch (error: any) {
     console.error('❌ Summary generation error:', error);
+
+    // SDK hata mesajlarını daha anlaşılır yap
+    let errorMessage = error.message || 'Özet oluşturulurken bir hata oluştu';
+
+    if (errorMessage.includes('API_KEY_INVALID') || errorMessage.includes('API key')) {
+      errorMessage = 'Geçersiz API anahtarı. Lütfen Admin panelinden yeni bir Gemini API anahtarı ekleyin.';
+    }
+
     return NextResponse.json(
       {
-        error: error.message || 'Özet oluşturulurken bir hata oluştu',
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
       { status: 500 }
     );

@@ -133,7 +133,7 @@ Link: ${currentState.link}`;
     });
   };
 
-  // Generate summary using Gemini API
+  // Generate summary using Gemini API (via secure server endpoint)
   const generateSummary = async () => {
     setIsGeneratingSummary(true);
     try {
@@ -158,52 +158,31 @@ Link: ${currentState.link}`;
         return;
       }
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: `Lütfen aşağıdaki haberin kısa bir özetini çıkar. Sadece özet metnini yaz, başlık veya etiket ekleme. Maksimum 2-3 cümle:\n\n${currentState.content}`,
-                  },
-                ],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 200,
-            },
-          }),
-        }
-      );
+      // Call our secure API endpoint instead of Gemini directly
+      const response = await fetch('/api/generate-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: currentState.content,
+          apiKey: apiKey,
+        }),
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Gemini API Error:", errorData);
-        throw new Error(errorData.error?.message || "Gemini API hatası");
+        const errorData = await response.json();
+        console.error("API Error:", errorData);
+        throw new Error(errorData.error || "Özet oluşturulamadı");
       }
 
       const data = await response.json();
-      let summary = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-      // Clean up the summary - remove any markdown formatting or extra labels
-      summary = summary
-        .replace(/^#+\s*/gm, "") // Remove markdown headers
-        .replace(/^\*\*.*?\*\*:?\s*/gm, "") // Remove bold labels
-        .replace(/^Özet:?\s*/gi, "") // Remove "Özet:" prefix
-        .replace(/^Summary:?\s*/gi, "") // Remove "Summary:" prefix
-        .trim();
+      const summary = data.summary || "";
 
       updateField("summary", summary);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Özet oluşturma hatası:", error);
-      alert("Özet oluşturulurken bir hata oluştu!");
+      alert(`Özet oluşturulurken bir hata oluştu: ${error.message}`);
     } finally {
       setIsGeneratingSummary(false);
     }

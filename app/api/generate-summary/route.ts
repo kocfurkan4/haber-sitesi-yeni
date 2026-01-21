@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { kv } from '@vercel/kv';
+import crypto from 'crypto';
 
 /**
  * POST /api/generate-summary
  * Google Gemini SDK ile haber özeti oluşturur
- * URL sorunları SDK tarafından otomatik çözülür
+ * - Vercel KV ile caching (aynı içerik için tekrar API çağrısı yapılmaz)
+ * - Multiple API key desteği (virgülle ayrılmış, failover)
  */
 export async function POST(req: NextRequest) {
   try {
@@ -24,32 +27,84 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Content hash oluştur (cache key için)
+    const contentHash = crypto.createHash('md5').update(content).digest('hex');
+    const cacheKey = `summary:${contentHash}`;
+
+    // Cache'e bak
+    const cachedSummary = await kv.get<string>(cacheKey);
+    if (cachedSummary) {
+      console.log('✅ Cache hit! Özet cache\'den döndürülüyor:', {
+        cacheKey,
+        summaryLength: cachedSummary.length
+      });
+      return NextResponse.json({
+        summary: cachedSummary,
+        model: 'gemini-flash-latest',
+        method: 'Cache',
+        cached: true
+      });
+    }
+
     console.log('🔍 Özet API Çağrısı (Google SDK):', {
       contentLength: content.length,
-      apiKeyPrefix: apiKey.substring(0, 10) + '...'
+      cacheKey
     });
 
-    // Google Generative AI SDK kullan (URL derdi yok!)
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-flash-latest',
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 500,
+    // Multiple API key desteği (virgülle ayrılmış)
+    const apiKeys = apiKey.split(',').map((k: string) => k.trim()).filter(Boolean);
+    let summary = '';
+    let successfulKey = '';
+    let lastError: any = null;
+
+    // Her API key'i dene (biri başarısız olursa diğeri)
+    for (let i = 0; i < apiKeys.length; i++) {
+      const currentKey = apiKeys[i];
+      try {
+        console.log(`🔑 API Key ${i + 1}/${apiKeys.length} deneniyor...`, {
+          keyPrefix: currentKey.substring(0, 10) + '...'
+        });
+
+        const genAI = new GoogleGenerativeAI(currentKey);
+        const model = genAI.getGenerativeModel({
+          model: 'gemini-flash-latest',
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 500,
+          }
+        });
+
+        const prompt = `Lütfen aşağıdaki haberin kısa bir özetini çıkar. Sadece özet metnini yaz, başlık veya etiket ekleme. Maksimum 2-3 cümle:\n\n${content}`;
+
+        // Özet oluştur
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        summary = response.text();
+        successfulKey = currentKey;
+
+        console.log(`✅ API Key ${i + 1} başarılı!`, {
+          summaryLength: summary.length
+        });
+        break; // Başarılı olduysa döngüden çık
+
+      } catch (error: any) {
+        lastError = error;
+        console.error(`❌ API Key ${i + 1} başarısız:`, error.message);
+
+        // Son key de başarısız olduysa hata fırlat
+        if (i === apiKeys.length - 1) {
+          throw error;
+        }
+        // Değilse bir sonraki key'i dene
+        continue;
       }
-    });
-
-    const prompt = `Lütfen aşağıdaki haberin kısa bir özetini çıkar. Sadece özet metnini yaz, başlık veya etiket ekleme. Maksimum 2-3 cümle:\n\n${content}`;
-
-    // Özet oluştur
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    let summary = response.text();
+    }
 
     console.log('✅ Gemini SDK Başarılı (Ham Yanıt):', {
       model: 'gemini-flash-latest',
       rawSummary: summary,
-      summaryLength: summary.length
+      summaryLength: summary.length,
+      usedKeyPrefix: successfulKey.substring(0, 10) + '...'
     });
 
     // Clean up the summary - sadece başlangıçtaki etiketleri temizle
@@ -63,10 +118,15 @@ export async function POST(req: NextRequest) {
       .replace(/\*\*$/gm, '') // Remove ending **
       .trim();
 
+    // Cache'e kaydet (30 gün)
+    await kv.set(cacheKey, summary, { ex: 30 * 24 * 60 * 60 });
+    console.log('💾 Özet cache\'e kaydedildi:', { cacheKey });
+
     return NextResponse.json({
       summary,
       model: 'gemini-flash-latest',
-      method: 'Google SDK'
+      method: 'Google SDK',
+      cached: false
     });
 
   } catch (error: any) {

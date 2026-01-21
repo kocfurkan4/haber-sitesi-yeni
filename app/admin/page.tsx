@@ -758,7 +758,15 @@ export default function AdminPage() {
                 {geminiKeys.length}
               </span>
             </div>
-            <p className="text-gray-700 text-sm mb-4">Haber çevirisi için Gemini AI anahtarları (1% oranla kullanılır)</p>
+            <p className="text-gray-700 text-sm mb-4">
+              Haber çevirisi ve özet için Gemini AI anahtarları.
+              <span className="block mt-1 text-purple-600 font-semibold">
+                ✨ Birden fazla anahtar eklerseniz, biri başarısız olduğunda otomatik olarak diğeri denenir!
+              </span>
+              <span className="block mt-1 text-gray-600 text-xs">
+                Tüm anahtarlar Vercel KV'de güvenli şekilde saklanır. Cache sistemi sayesinde API kullanımı minimumda tutulur.
+              </span>
+            </p>
 
             <div className="mb-4">
               <label className="block text-gray-800 font-semibold mb-2">Yeni Gemini API Anahtarı Ekle</label>
@@ -826,7 +834,15 @@ export default function AdminPage() {
                 {elevenlabsKeys.length}
               </span>
             </div>
-            <p className="text-gray-700 text-sm mb-4">Ses oluşturma için ElevenLabs API (0% oranla kullanılır)</p>
+            <p className="text-gray-700 text-sm mb-4">
+              Ses oluşturma için ElevenLabs API anahtarları.
+              <span className="block mt-1 text-purple-600 font-semibold">
+                ✨ Birden fazla anahtar eklerseniz, biri başarısız olduğunda otomatik olarak diğeri denenir!
+              </span>
+              <span className="block mt-1 text-gray-600 text-xs">
+                Tüm anahtarlar Vercel KV'de güvenli şekilde saklanır. Cache sistemi sayesinde aynı metin için tekrar ses oluşturulmaz.
+              </span>
+            </p>
 
             <div className="mb-4">
               <label className="block text-gray-800 font-semibold mb-2">Yeni ElevenLabs API Anahtarı Ekle</label>

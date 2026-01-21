@@ -19,8 +19,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Gemini API'ye istek at (server-side, güvenli)
+    // Model: gemini-1.5-flash-latest (en güncel stable versiyon)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {

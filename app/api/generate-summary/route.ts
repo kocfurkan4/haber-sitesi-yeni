@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       model: 'gemini-flash-latest',
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 200,
+        maxOutputTokens: 500,
       }
     });
 
@@ -46,17 +46,21 @@ export async function POST(req: NextRequest) {
     const response = result.response;
     let summary = response.text();
 
-    console.log('✅ Gemini SDK Başarılı:', {
+    console.log('✅ Gemini SDK Başarılı (Ham Yanıt):', {
       model: 'gemini-flash-latest',
+      rawSummary: summary,
       summaryLength: summary.length
     });
 
-    // Clean up the summary
+    // Clean up the summary - sadece başlangıçtaki etiketleri temizle
     summary = summary
       .replace(/^#+\s*/gm, '') // Remove markdown headers
-      .replace(/^\*\*.*?\*\*:?\s*/gm, '') // Remove bold labels
+      .replace(/^\*\*Özet:?\*\*:?\s*/gi, '') // Remove "**Özet:**" prefix
+      .replace(/^\*\*Summary:?\*\*:?\s*/gi, '') // Remove "**Summary:**" prefix
       .replace(/^Özet:?\s*/gi, '') // Remove "Özet:" prefix
       .replace(/^Summary:?\s*/gi, '') // Remove "Summary:" prefix
+      .replace(/^\*\*/gm, '') // Remove starting **
+      .replace(/\*\*$/gm, '') // Remove ending **
       .trim();
 
     return NextResponse.json({

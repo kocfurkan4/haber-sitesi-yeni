@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     // Google Generative AI SDK kullan (URL derdi yok!)
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash-002',
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 200,
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     let summary = response.text();
 
     console.log('✅ Gemini SDK Başarılı:', {
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash-002',
       summaryLength: summary.length
     });
 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       summary,
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash-002',
       method: 'Google SDK'
     });
 

@@ -298,16 +298,37 @@ export default function AdminPage() {
           // Check if data is valid and has articles
           if (data && data.articles && Array.isArray(data.articles)) {
             if (data.articles.length > 0) {
-              // Filter out duplicates based on sourceUrl
-              const newArticles = data.articles.filter((article: any) => {
-                return !allCollectedArticles.some(
+              let newCount = 0;
+              let updatedCount = 0;
+
+              // Process each article: update if exists, add if new
+              data.articles.forEach((article: any) => {
+                const existingIndex = allCollectedArticles.findIndex(
                   (existing: any) => existing.sourceUrl === article.sourceUrl
                 );
+
+                if (existingIndex !== -1) {
+                  // Update existing article content
+                  allCollectedArticles[existingIndex] = {
+                    ...allCollectedArticles[existingIndex],
+                    ...article,
+                    // Preserve some fields from existing
+                    id: allCollectedArticles[existingIndex].id,
+                    isSent: allCollectedArticles[existingIndex].isSent,
+                  };
+                  updatedCount++;
+                } else {
+                  // Add new article
+                  allCollectedArticles.push(article);
+                  newCount++;
+                }
               });
 
-              allCollectedArticles = [...allCollectedArticles, ...newArticles];
               successCount++;
-              setCollectionStatus(`${feed.name}: ${newArticles.length} yeni haber eklendi`);
+              const statusMessage = [];
+              if (newCount > 0) statusMessage.push(`${newCount} yeni`);
+              if (updatedCount > 0) statusMessage.push(`${updatedCount} güncellendi`);
+              setCollectionStatus(`${feed.name}: ${statusMessage.join(", ") || "Değişiklik yok"}`);
             } else {
               // No articles found but no error
               setCollectionStatus(`${feed.name}: Yeni haber bulunamadı`);

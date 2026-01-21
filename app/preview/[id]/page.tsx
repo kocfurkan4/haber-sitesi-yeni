@@ -9,7 +9,6 @@ import {
   Copy,
   Volume2,
   Download,
-  Sparkles,
   CheckCircle2,
 } from "lucide-react";
 
@@ -56,6 +55,24 @@ export default function PreviewPage() {
       router.push("/haberler");
     }
   }, [initialState.title, initialState.content, router]);
+
+  // Auto-generate summary on page load
+  useEffect(() => {
+    const autoGenerateSummary = async () => {
+      // Only generate if we have content but no summary
+      if (currentState.content && !currentState.summary && !isGeneratingSummary) {
+        await generateSummary();
+      }
+    };
+
+    // Small delay to ensure component is mounted
+    const timer = setTimeout(() => {
+      autoGenerateSummary();
+    }, 500);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   // Add to history when state changes (but not from undo/redo)
   const addToHistory = (newState: NewsState) => {
@@ -120,7 +137,21 @@ Link: ${currentState.link}`;
   const generateSummary = async () => {
     setIsGeneratingSummary(true);
     try {
-      const apiKey = localStorage.getItem("gemini_api_key");
+      // Get Gemini API keys from localStorage
+      const keysString = localStorage.getItem("geminiKeys");
+      let apiKey = "";
+
+      if (keysString) {
+        try {
+          const keys = JSON.parse(keysString);
+          if (Array.isArray(keys) && keys.length > 0) {
+            apiKey = keys[0].value; // Use first key
+          }
+        } catch (e) {
+          console.error("Error parsing Gemini keys:", e);
+        }
+      }
+
       if (!apiKey) {
         alert("Gemini API anahtarı bulunamadı! Lütfen Admin panelinden API anahtarını girin.");
         setIsGeneratingSummary(false);
@@ -385,31 +416,19 @@ Link: ${currentState.link}`;
             />
           </div>
 
-          {/* Summary with Generate Button */}
+          {/* Summary (Auto-generated) */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-semibold text-gray-700">
-                ✨ Özet
+                ✨ Özet {isGeneratingSummary && <span className="text-indigo-600 text-xs">(Otomatik oluşturuluyor...)</span>}
               </label>
-              <button
-                onClick={generateSummary}
-                disabled={isGeneratingSummary}
-                className={`flex items-center gap-2 px-3 py-1 text-sm rounded-lg transition-colors font-medium ${
-                  isGeneratingSummary
-                    ? "bg-indigo-300 text-white cursor-not-allowed"
-                    : "bg-indigo-500 hover:bg-indigo-600 text-white"
-                }`}
-              >
-                <Sparkles size={16} />
-                {isGeneratingSummary ? "Oluşturuluyor..." : "Gemini ile Özet Oluştur"}
-              </button>
             </div>
             <textarea
               value={currentState.summary}
               onChange={(e) => updateField("summary", e.target.value)}
               rows={3}
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-none"
-              placeholder="Haber özeti (Gemini ile oluşturabilirsiniz)"
+              placeholder={isGeneratingSummary ? "Özet Gemini API ile otomatik oluşturuluyor..." : "Haber özeti (Otomatik oluşturuldu)"}
             />
           </div>
 

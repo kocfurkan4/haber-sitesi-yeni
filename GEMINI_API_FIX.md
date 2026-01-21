@@ -9,14 +9,17 @@ Her iki endpoint de artık **REST API** ile çalışıyor (önceden bir tanesi `
 - ✅ `/api/translate` - Metin çevirisi
 
 ### 2. Güncel Model Kullanımı
-Her iki endpoint de **gemini-1.5-pro-latest** modelini kullanıyor:
-- Daha stabil
-- Daha iyi kalite
-- Tutarlı sonuçlar
+Her iki endpoint de **gemini-1.5-flash** modelini kullanıyor:
+- ✅ Hızlı ve verimli
+- ✅ Özet ve çeviri için ideal
+- ✅ Google tarafından destekleniyor
+- ✅ Düşük maliyet
+
+**NOT:** `gemini-1.5-pro-latest` modeli mevcut değil, bu yüzden `gemini-1.5-flash` kullanıyoruz.
 
 ### 3. URL Yapısı (ÖNEMLİ!)
 ```typescript
-const MODEL_NAME = 'gemini-1.5-pro-latest';
+const MODEL_NAME = 'gemini-1.5-flash';
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 ```
 
@@ -71,11 +74,16 @@ Her API çağrısında artık konsola detaylı log basılıyor:
 
 ## ⚠️ Hata Alırsanız
 
-### "models/gemini-1.5-pro-latest is not found"
-API key'iniz geçersiz veya eski olabilir:
+### "models/gemini-1.5-flash is not found" veya "Model not supported"
+**Sorun:** API key yanlış veya geçersiz
+
+**Çözüm:**
 1. [Google AI Studio](https://aistudio.google.com/app/apikey)'ya gidin
-2. Yeni bir API key oluşturun
-3. Admin panelden güncelleyin
+2. **Yeni bir API key oluşturun** (eski key'leri silmeyin, yeni ekleyin)
+3. Admin Panel → Gemini API Anahtarları → key'i ekleyin
+4. Sayfayı yenileyin ve tekrar deneyin
+
+**ÖNEMLİ:** API key'iniz **AIzaSy** ile başlamalıdır!
 
 ### "API key not found"
 Admin panelden Gemini API key ekleyin:

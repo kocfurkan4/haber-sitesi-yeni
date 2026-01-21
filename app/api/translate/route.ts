@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Gemini API - Aynı model ile tutarlılık
-    const MODEL_NAME = 'gemini-1.5-pro-latest';
+    const MODEL_NAME = 'gemini-1.5-flash';
     const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 
     console.log('🌐 Çeviri API Çağrısı:', {

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     // Gemini API - Güncel ve stabil model
     // NOT: Model ismi URL'de zaten var, ekstra 'models/' EKLEME!
-    const MODEL_NAME = 'gemini-1.5-pro-latest'; // Daha stabil model
+    const MODEL_NAME = 'gemini-1.5-flash'; // Hızlı ve stabil model (özet için ideal)
     const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 
     console.log('🔍 Özet API Çağrısı:', {

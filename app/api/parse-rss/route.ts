@@ -128,6 +128,12 @@ export async function POST(request: NextRequest) {
             .replace(/&amp;/g, "&") // Replace ampersand
             .replace(/&lt;/g, "<") // Replace less than
             .replace(/&gt;/g, ">") // Replace greater than
+            .replace(/&#8217;/g, "'") // Right single quotation mark
+            .replace(/&#8216;/g, "'") // Left single quotation mark
+            .replace(/&#8220;/g, '"') // Left double quotation mark
+            .replace(/&#8221;/g, '"') // Right double quotation mark
+            .replace(/&#8230;/g, "...") // Ellipsis
+            .replace(/&#(\d+);/g, (_match: string, dec: string) => String.fromCharCode(parseInt(dec))) // Numeric entities
             .replace(/\n{3,}/g, "\n\n") // Max 2 consecutive newlines
             .trim();
 

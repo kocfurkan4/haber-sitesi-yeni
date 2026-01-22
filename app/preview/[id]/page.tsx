@@ -10,6 +10,7 @@ import {
   Volume2,
   Download,
   CheckCircle2,
+  Trash2,
 } from "lucide-react";
 
 interface NewsState {
@@ -45,6 +46,7 @@ export default function PreviewPage() {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [isGeneratingSpeech, setIsGeneratingSpeech] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Refs to prevent duplicate history entries
   const isUpdatingFromHistory = useRef(false);
@@ -279,6 +281,69 @@ Link: ${currentState.link}`;
     document.body.removeChild(a);
   };
 
+  // Delete news from both localforage and database
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      `"${currentState.title}" başlıklı haberi silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      // Import localforage dynamically
+      const localforage = (await import('localforage')).default;
+
+      // Get news ID from URL params
+      const newsId = searchParams.get("id") || `${currentState.title}-${currentState.date}`;
+
+      // Delete from localforage
+      try {
+        const allNews = await localforage.getItem<any[]>('processedNews') || [];
+        const updatedNews = allNews.filter((news: any) => {
+          // Match by ID or by title+date
+          const itemId = news.id || `${news.title}-${news.date}`;
+          return itemId !== newsId;
+        });
+        await localforage.setItem('processedNews', updatedNews);
+        console.log('✅ Haber localforage\'dan silindi');
+      } catch (localError) {
+        console.error('⚠️ Localforage silme hatası:', localError);
+      }
+
+      // Delete from database (Vercel KV)
+      try {
+        const response = await fetch('/api/delete-news', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ newsId }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Database\'den silinemedi');
+        }
+
+        console.log('✅ Haber database\'den silindi');
+      } catch (dbError) {
+        console.error('⚠️ Database silme hatası:', dbError);
+      }
+
+      // Redirect to news list
+      alert('Haber başarıyla silindi!');
+      router.push('/haberler');
+
+    } catch (error) {
+      console.error('❌ Haber silme hatası:', error);
+      alert('Haber silinirken bir hata oluştu!');
+      setIsDeleting(false);
+    }
+  };
+
   if (!initialState.title || !initialState.content) {
     return null;
   }
@@ -467,14 +532,27 @@ Link: ${currentState.link}`;
             />
           </div>
 
-          {/* Back Button */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          {/* Back and Delete Buttons */}
+          <div className="mt-8 pt-6 border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
             <button
               onClick={() => router.back()}
               className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               <ArrowLeft size={20} />
               Geri Dön
+            </button>
+
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all font-semibold shadow-lg ${
+                isDeleting
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white hover:shadow-xl transform hover:scale-105"
+              }`}
+            >
+              <Trash2 size={20} />
+              {isDeleting ? "Siliniyor..." : "Haberi Sil"}
             </button>
           </div>
         </div>

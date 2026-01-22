@@ -5,7 +5,11 @@ import Parser from 'rss-parser';
 // RSS Parser'ı başlat
 const parser = new Parser({
   customFields: {
-    item: ['media:content', 'media:group'], // Medya içeriğini yakalamak için
+    item: [
+      ['content:encoded', 'contentEncoded'], // Tam haber içeriği için
+      ['media:content', 'mediaContent'],
+      ['media:group', 'mediaGroup'],
+    ],
   },
 });
 
@@ -41,12 +45,28 @@ export async function POST(request: Request) {
           // Tire ve sonrasını kaldır (örn: "Breaking Defense - News" -> "Breaking Defense")
           sourceName = sourceName.split('-')[0].trim();
 
+          // Prioritize content:encoded for full article content
+          const rawContent = item.contentEncoded || item.content || item.contentSnippet || item.description || "";
+
+          // Clean HTML and decode entities
+          const cleanContent = rawContent
+            .replace(/<\/p>/gi, "\n\n")
+            .replace(/<br\s*\/?>/gi, "\n")
+            .replace(/<[^>]*>/g, "")
+            .replace(/&nbsp;/g, " ")
+            .replace(/&quot;/g, '"')
+            .replace(/&amp;/g, "&")
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/\n{3,}/g, "\n\n")
+            .trim();
+
           return {
             id: item.guid || item.link,
             title: item.title,
             link: item.link,
             pubDate: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-            content: item.contentSnippet || item.content,
+            content: cleanContent,
             source: sourceName,
           };
         });

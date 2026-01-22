@@ -5,6 +5,7 @@ const parser = new Parser({
   timeout: 10000, // 10 second timeout
   customFields: {
     item: [
+      ["content:encoded", "contentEncoded"], // Full article content
       ["media:content", "mediaContent"],
       ["media:thumbnail", "mediaThumbnail"],
       ["enclosure", "enclosure"],
@@ -106,9 +107,23 @@ export async function POST(request: NextRequest) {
             imageUrl = item.mediaThumbnail.$.url;
           }
 
-          // Clean up content
-          const content = item.contentSnippet || item.content || item.description || "";
-          const cleanContent = content.replace(/<[^>]*>/g, "").trim();
+          // Clean up content - prioritize content:encoded for full article text
+          // content:encoded usually contains the full HTML content
+          // contentSnippet is a plain text snippet from content or description
+          const rawContent = item.contentEncoded || item.content || item.contentSnippet || item.description || "";
+
+          // Strip HTML tags but preserve paragraph breaks
+          let cleanContent = rawContent
+            .replace(/<\/p>/gi, "\n\n") // Preserve paragraphs
+            .replace(/<br\s*\/?>/gi, "\n") // Preserve line breaks
+            .replace(/<[^>]*>/g, "") // Remove all HTML tags
+            .replace(/&nbsp;/g, " ") // Replace nbsp with space
+            .replace(/&quot;/g, '"') // Replace quotes
+            .replace(/&amp;/g, "&") // Replace ampersand
+            .replace(/&lt;/g, "<") // Replace less than
+            .replace(/&gt;/g, ">") // Replace greater than
+            .replace(/\n{3,}/g, "\n\n") // Max 2 consecutive newlines
+            .trim();
 
           // Generate tags from categories or title
           const tags = item.categories && Array.isArray(item.categories)
@@ -119,7 +134,7 @@ export async function POST(request: NextRequest) {
             id: item.guid || item.link || `${Date.now()}-${Math.random()}`,
             title: (item.title || "Başlıksız").substring(0, 200),
             summary: cleanContent.substring(0, 300) + (cleanContent.length > 300 ? "..." : ""),
-            content: cleanContent.substring(0, 5000), // Increased from 1000 to 5000
+            content: cleanContent.substring(0, 15000), // Increased to 15000 for full articles
             image: imageUrl,
             source: feed.title || "Bilinmeyen Kaynak",
             category: (item.categories && item.categories[0]) || "Genel",

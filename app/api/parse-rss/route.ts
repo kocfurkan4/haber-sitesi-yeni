@@ -109,12 +109,13 @@ export async function POST(request: NextRequest) {
 
           // Clean up content - prioritize content:encoded for full article text
           // Try multiple ways to access content:encoded (different parsers handle namespaces differently)
+          const itemAny = item as any;
           const rawContent =
             item.contentEncoded ||
-            item['content:encoded'] ||
+            itemAny['content:encoded'] ||
             item.content ||
             item.contentSnippet ||
-            item.description ||
+            itemAny.description ||
             "";
 
           // Strip HTML tags but preserve paragraph breaks

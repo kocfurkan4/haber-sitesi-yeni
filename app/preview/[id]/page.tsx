@@ -135,6 +135,23 @@ Link: ${currentState.link}`;
     });
   };
 
+  // Detect if text is in English
+  const isEnglish = (text: string): boolean => {
+    const englishWords = ['the', 'is', 'at', 'which', 'on', 'and', 'a', 'an', 'as', 'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'can', 'could', 'may', 'might'];
+    const sample = text.toLowerCase().substring(0, 500);
+    let englishWordCount = 0;
+
+    for (const word of englishWords) {
+      const regex = new RegExp(`\\b${word}\\b`, 'g');
+      const matches = sample.match(regex);
+      if (matches) {
+        englishWordCount += matches.length;
+      }
+    }
+
+    return englishWordCount > 5;
+  };
+
   // Generate summary using Gemini API (via secure server endpoint)
   const generateSummary = async () => {
     setIsGeneratingSummary(true);
@@ -160,14 +177,62 @@ Link: ${currentState.link}`;
         return;
       }
 
-      // Call our secure API endpoint instead of Gemini directly
+      // Check if content is in English
+      const contentIsEnglish = isEnglish(currentState.title + ' ' + currentState.content);
+
+      let finalTitle = currentState.title;
+      let finalContent = currentState.content;
+
+      // If English, translate to Turkish
+      if (contentIsEnglish) {
+        console.log('🌍 İngilizce içerik tespit edildi, Türkçeye çeviriliyor...');
+
+        // Translate title
+        const titleResponse = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: currentState.title,
+            targetLang: 'tr',
+            apiKey: apiKey
+          }),
+        });
+
+        if (titleResponse.ok) {
+          const titleData = await titleResponse.json();
+          finalTitle = titleData.translatedText;
+          updateField("title", finalTitle);
+        }
+
+        // Translate content (first 3000 chars)
+        const contentToTranslate = currentState.content.substring(0, 3000);
+        const contentResponse = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: contentToTranslate,
+            targetLang: 'tr',
+            apiKey: apiKey
+          }),
+        });
+
+        if (contentResponse.ok) {
+          const contentData = await contentResponse.json();
+          finalContent = contentData.translatedText + (currentState.content.length > 3000 ? '...' : '');
+          updateField("content", finalContent);
+        }
+
+        console.log('✅ Çeviri tamamlandı');
+      }
+
+      // Generate summary from (potentially translated) content
       const response = await fetch('/api/generate-summary', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          content: currentState.content,
+          content: finalContent,
           apiKey: apiKey,
         }),
       });

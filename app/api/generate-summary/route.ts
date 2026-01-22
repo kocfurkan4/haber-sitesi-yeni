@@ -70,11 +70,11 @@ export async function POST(req: NextRequest) {
           model: 'gemini-flash-latest',
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 500,
+            maxOutputTokens: 1500,
           }
         });
 
-        const prompt = `Lütfen aşağıdaki haberin kısa bir özetini çıkar. Sadece özet metnini yaz, başlık veya etiket ekleme. Maksimum 2-3 cümle:\n\n${content}`;
+        const prompt = `Aşağıdaki metni detaylı bir şekilde özetle. Özetinde EN AZ 10 cümle kullan. Sadece özet metnini yaz, "Özet:", "Başlık:" gibi etiketler veya formatlama ekleme. Doğrudan özet cümleleriyle başla:\n\n${content}`;
 
         // Özet oluştur
         const result = await model.generateContent(prompt);

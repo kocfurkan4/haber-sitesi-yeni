@@ -151,19 +151,14 @@ export async function POST(request: NextRequest) {
       })
       .filter((article: any) => article !== null);
 
-    // Try to fetch full content for articles with short content (< 300 chars)
-    // This is done in parallel with a timeout to not slow down the RSS parsing
+    // Always try to fetch full content from original site (not just for short content)
+    // Many sites (like Defense News) only provide summaries in RSS feed
     const articlesWithFullContent = await Promise.allSettled(
       articles.map(async (article: any) => {
-        // Skip if content is already long enough
-        if (article.content.length > 300) {
-          return article;
-        }
-
         try {
-          // Try to scrape full content with a short timeout
+          // Try to scrape full content with a timeout
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
           const scrapeResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/scrape-article`, {
             method: 'POST',
@@ -183,7 +178,7 @@ export async function POST(request: NextRequest) {
           }
         } catch (error) {
           // Silently ignore scraping failures - use RSS content
-          console.log(`⚠️ Scraping skipped for: ${article.title.substring(0, 50)}...`);
+          console.log(`⚠️ Scraping failed, using RSS content for: ${article.title.substring(0, 50)}...`);
         }
 
         return article;
@@ -221,8 +216,8 @@ export async function POST(request: NextRequest) {
                   signal: AbortSignal.timeout(10000)
                 });
 
-                // Translate content (first 2000 chars)
-                const contentToTranslate = article.content.substring(0, 2000);
+                // Translate content (first 3000 chars for better coverage)
+                const contentToTranslate = article.content.substring(0, 3000);
                 const contentResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/translate`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -240,11 +235,14 @@ export async function POST(request: NextRequest) {
 
                   console.log(`✅ Article translated: ${translatedTitle.substring(0, 50)}...`);
 
+                  // Generate Turkish summary from translated content
+                  const translatedSummary = translatedContent.substring(0, 300) + (translatedContent.length > 300 ? '...' : '');
+
                   return {
                     ...article,
                     title: translatedTitle,
-                    content: translatedContent + (article.content.length > 2000 ? '...' : ''),
-                    summary: translatedContent.substring(0, 300) + '...',
+                    content: translatedContent + (article.content.length > 3000 ? '...' : ''),
+                    summary: translatedSummary,
                     originalLanguage: 'en'
                   };
                 }

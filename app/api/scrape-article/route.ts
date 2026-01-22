@@ -74,6 +74,10 @@ export async function POST(req: NextRequest) {
     // Strategy 2: Look for main content div (common patterns)
     if (!content || content.length < 200) {
       const patterns = [
+        // Defense News specific patterns
+        /<div[^>]*class="[^"]*article-body[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+        /<div[^>]*class="[^"]*story-body[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+        // Generic patterns
         /<div[^>]*class="[^"]*article-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
         /<div[^>]*class="[^"]*post-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
         /<div[^>]*class="[^"]*entry-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
@@ -115,9 +119,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Limit content to 10000 characters
-    if (content.length > 10000) {
-      content = content.substring(0, 10000) + '...';
+    // Limit content to 20000 characters (increased for full articles)
+    if (content.length > 20000) {
+      content = content.substring(0, 20000) + '...';
     }
 
     console.log('✅ Scraping başarılı:', {

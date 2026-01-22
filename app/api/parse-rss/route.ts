@@ -108,9 +108,14 @@ export async function POST(request: NextRequest) {
           }
 
           // Clean up content - prioritize content:encoded for full article text
-          // content:encoded usually contains the full HTML content
-          // contentSnippet is a plain text snippet from content or description
-          const rawContent = item.contentEncoded || item.content || item.contentSnippet || item.description || "";
+          // Try multiple ways to access content:encoded (different parsers handle namespaces differently)
+          const rawContent =
+            item.contentEncoded ||
+            item['content:encoded'] ||
+            item.content ||
+            item.contentSnippet ||
+            item.description ||
+            "";
 
           // Strip HTML tags but preserve paragraph breaks
           let cleanContent = rawContent
@@ -130,10 +135,28 @@ export async function POST(request: NextRequest) {
             ? item.categories.slice(0, 5)
             : [];
 
+          // Generate a better summary (first 2-3 sentences or 500 chars)
+          const summaryLength = 500;
+          let summary = cleanContent.substring(0, summaryLength);
+
+          // Try to end at a sentence boundary
+          const lastPeriod = summary.lastIndexOf('.');
+          const lastQuestion = summary.lastIndexOf('?');
+          const lastExclaim = summary.lastIndexOf('!');
+          const lastSentence = Math.max(lastPeriod, lastQuestion, lastExclaim);
+
+          if (lastSentence > 200) {
+            // If we found a sentence ending after 200 chars, use it
+            summary = summary.substring(0, lastSentence + 1);
+          } else {
+            // Otherwise just truncate and add ellipsis
+            summary = summary + (cleanContent.length > summaryLength ? "..." : "");
+          }
+
           return {
             id: item.guid || item.link || `${Date.now()}-${Math.random()}`,
             title: (item.title || "Başlıksız").substring(0, 200),
-            summary: cleanContent.substring(0, 300) + (cleanContent.length > 300 ? "..." : ""),
+            summary: summary,
             content: cleanContent.substring(0, 15000), // Increased to 15000 for full articles
             image: imageUrl,
             source: feed.title || "Bilinmeyen Kaynak",
@@ -151,14 +174,22 @@ export async function POST(request: NextRequest) {
       })
       .filter((article: any) => article !== null);
 
-    // Always try to fetch full content from original site (not just for short content)
-    // Many sites (like Defense News) only provide summaries in RSS feed
+    // Try to fetch full content ONLY for articles with short content (< 500 chars)
+    // Sites like Breaking Defense already provide full text in content:encoded
     const articlesWithFullContent = await Promise.allSettled(
       articles.map(async (article: any) => {
+        // Skip scraping if content is already long enough
+        if (article.content.length > 500) {
+          console.log(`✓ Skipping scraping (RSS has full content): ${article.title.substring(0, 50)}...`);
+          return article;
+        }
+
         try {
           // Try to scrape full content with a timeout
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+          console.log(`🌐 Attempting to scrape: ${article.title.substring(0, 50)}...`);
 
           const scrapeResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/scrape-article`, {
             method: 'POST',
@@ -235,8 +266,21 @@ export async function POST(request: NextRequest) {
 
                   console.log(`✅ Article translated: ${translatedTitle.substring(0, 50)}...`);
 
-                  // Generate Turkish summary from translated content
-                  const translatedSummary = translatedContent.substring(0, 300) + (translatedContent.length > 300 ? '...' : '');
+                  // Generate Turkish summary from translated content (first 2-3 sentences or 500 chars)
+                  const summaryLength = 500;
+                  let translatedSummary = translatedContent.substring(0, summaryLength);
+
+                  // Try to end at a sentence boundary
+                  const lastPeriod = translatedSummary.lastIndexOf('.');
+                  const lastQuestion = translatedSummary.lastIndexOf('?');
+                  const lastExclaim = translatedSummary.lastIndexOf('!');
+                  const lastSentence = Math.max(lastPeriod, lastQuestion, lastExclaim);
+
+                  if (lastSentence > 200) {
+                    translatedSummary = translatedSummary.substring(0, lastSentence + 1);
+                  } else {
+                    translatedSummary = translatedSummary + (translatedContent.length > summaryLength ? "..." : "");
+                  }
 
                   return {
                     ...article,

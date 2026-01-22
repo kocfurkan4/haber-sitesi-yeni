@@ -46,7 +46,14 @@ export async function POST(request: Request) {
           sourceName = sourceName.split('-')[0].trim();
 
           // Prioritize content:encoded for full article content
-          const rawContent = item.contentEncoded || item.content || item.contentSnippet || item.description || "";
+          // Try multiple ways to access content:encoded (different parsers handle namespaces differently)
+          const rawContent =
+            item.contentEncoded ||
+            item['content:encoded'] ||
+            item.content ||
+            item.contentSnippet ||
+            item.description ||
+            "";
 
           // Clean HTML and decode entities
           const cleanContent = rawContent

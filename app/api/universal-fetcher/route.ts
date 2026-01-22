@@ -203,7 +203,7 @@ async function fetchFromRSS(rssUrl: string, geminiApiKey?: string): Promise<Arti
 
         // Generate summary
         const isEnglish = detectEnglish(fullText);
-        let summary = fullText.substring(0, 500);
+        let summary = truncateToSentence(fullText, 800);
 
         // If English and Gemini key provided, generate Turkish summary
         if (isEnglish && geminiApiKey) {
@@ -257,7 +257,7 @@ async function fetchFromDirectURL(articleUrl: string, geminiApiKey?: string): Pr
 
     // Generate summary
     const isEnglish = detectEnglish(fullText);
-    let summary = fullText.substring(0, 500);
+    let summary = truncateToSentence(fullText, 800);
 
     if (isEnglish && geminiApiKey) {
       console.log(`🌍 İngilizce içerik, Türkçe özet oluşturuluyor...`);
@@ -437,6 +437,45 @@ function detectEnglish(text: string): boolean {
   }
 
   return englishWordCount > 5;
+}
+
+/**
+ * Truncate text to max length without breaking sentences
+ */
+function truncateToSentence(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  // Maksimum karaktere kadar al
+  let truncated = text.substring(0, maxLength);
+
+  // Son cümlenin sonunu bul (. ! ? işaretleri)
+  const lastPeriod = Math.max(
+    truncated.lastIndexOf('. '),
+    truncated.lastIndexOf('! '),
+    truncated.lastIndexOf('? ')
+  );
+
+  // Eğer uygun bir cümle sonu bulunursa orada kes (en az %70'i kullanılmışsa)
+  if (lastPeriod > maxLength * 0.7) {
+    return truncated.substring(0, lastPeriod + 1).trim();
+  }
+
+  // Yoksa virgülde kes
+  const lastComma = truncated.lastIndexOf(', ');
+  if (lastComma > maxLength * 0.7) {
+    return truncated.substring(0, lastComma).trim() + '.';
+  }
+
+  // Son çare: boşlukta kes ve üç nokta ekle
+  const lastSpace = truncated.lastIndexOf(' ');
+  if (lastSpace > 0) {
+    return truncated.substring(0, lastSpace).trim() + '...';
+  }
+
+  // Hiçbiri bulunamazsa olduğu gibi döndür
+  return truncated + '...';
 }
 
 /**

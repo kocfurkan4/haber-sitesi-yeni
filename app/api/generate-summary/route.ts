@@ -70,11 +70,11 @@ export async function POST(req: NextRequest) {
           model: 'gemini-flash-latest',
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 500,
+            maxOutputTokens: 600,
           }
         });
 
-        const prompt = `Aşağıdaki haberi KISA ve ÖZ bir şekilde özetle. Özetinde EN FAZLA 3-4 cümle kullan. Sadece özet metnini yaz, "Özet:", "Başlık:" gibi etiketler veya formatlama ekleme. Doğrudan özet cümleleriyle başla:\n\n${content}`;
+        const prompt = `Aşağıdaki haberi Türkçe özetle. Özet, haberin ana noktalarını içermeli ve orijinal içerikten daha kısa olmalı. Özet maksimum 800 karakter olmalı, ancak 800 karaktere yaklaşırsan cümleyi yarıda kesme - anlam bütünlüğünü koru ve son cümleyi tamamla. Sadece özet metnini yaz, "Özet:", "Başlık:" gibi etiketler veya formatlama ekleme. Doğrudan özet cümleleriyle başla:\n\n${content}`;
 
         // Özet oluştur
         const result = await model.generateContent(prompt);

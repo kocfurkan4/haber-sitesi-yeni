@@ -201,16 +201,14 @@ Link: ${currentState.link}`;
         if (titleResponse.ok) {
           const titleData = await titleResponse.json();
           finalTitle = titleData.translatedText;
-          updateField("title", finalTitle);
         }
 
-        // Translate content (first 3000 chars)
-        const contentToTranslate = currentState.content.substring(0, 3000);
+        // Translate full content (no character limit)
         const contentResponse = await fetch('/api/translate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            text: contentToTranslate,
+            text: currentState.content,
             targetLang: 'tr',
             apiKey: apiKey
           }),
@@ -218,9 +216,17 @@ Link: ${currentState.link}`;
 
         if (contentResponse.ok) {
           const contentData = await contentResponse.json();
-          finalContent = contentData.translatedText + (currentState.content.length > 3000 ? '...' : '');
-          updateField("content", finalContent);
+          finalContent = contentData.translatedText;
         }
+
+        // Update state with translated versions
+        const translatedState = {
+          ...currentState,
+          title: finalTitle,
+          content: finalContent
+        };
+        setCurrentState(translatedState);
+        addToHistory(translatedState);
 
         console.log('✅ Çeviri tamamlandı');
       }
@@ -549,8 +555,8 @@ Link: ${currentState.link}`;
             <textarea
               value={currentState.summary}
               onChange={(e) => updateField("summary", e.target.value)}
-              rows={3}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-none"
+              rows={8}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-y"
               placeholder={isGeneratingSummary ? "Özet Gemini API ile otomatik oluşturuluyor..." : "Haber özeti (Otomatik oluşturuldu)"}
             />
           </div>
